@@ -1,0 +1,58 @@
+package com.example.CollectiveProject.Service;
+
+import com.example.CollectiveProject.Domain.User;
+import com.example.CollectiveProject.Repository.UserRepository;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@AllArgsConstructor
+public class UserService {
+    private UserRepository repository;
+
+    public User addService(User entity) {
+        return this.repository.save(entity);
+    }
+
+    public List<User> addAllService(List<User> entities) {
+        return this.repository.saveAll(entities);
+    }
+
+    public User getEntityById(Integer id) {
+        return this.repository.findById(id).orElse(null);
+    }
+
+    public List<User> getAll() {
+        return this.repository.findAll();
+    }
+
+    public boolean exists(Integer id) { return this.repository.existsById(id); }
+
+    public String deleteService(Integer id)
+    {
+        User user = this.getEntityById(id);
+        if(user != null)
+        {
+            this.repository.delete(user);
+            return "User with id " + id + ".";
+        }
+        return "There is no User with the id " + id + '.';
+    }
+
+    public User updateService(Integer id, User newEntity) {
+        User entityForUpdate = this.repository.findById(id).orElse(null);
+        if (entityForUpdate != null)
+        {
+            entityForUpdate.setAge(newEntity.getAge());
+            entityForUpdate.setName(newEntity.getName());
+            entityForUpdate.setEmail(newEntity.getEmail());
+            entityForUpdate.setUsername(newEntity.getUsername());
+            entityForUpdate.setPassword(newEntity.getPassword());
+            entityForUpdate.setGender(newEntity.getGender());
+            return this.repository.save(entityForUpdate);
+        }
+        return null;
+    }
+}
