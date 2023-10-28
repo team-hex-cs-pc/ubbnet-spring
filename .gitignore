@@ -1,3 +1,6 @@
+# Ignore dev profile related files
+application-dev.properties
+
 HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
@@ -31,3 +34,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignore all files with ".override" extension
+*.override
