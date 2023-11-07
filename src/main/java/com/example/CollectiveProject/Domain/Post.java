@@ -9,7 +9,7 @@ import java.util.Date;
 @Entity
 @Data
 @Table
-public class News {
+public class Post {
     @Id
     @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,14 +21,12 @@ public class News {
     @Column
     private String category;
     @Column
-    private String author;
-    @Column
     private int likes = 0;
     @Column
     private Date publicationDate;
 
     @ManyToOne(optional = true)
-    @JoinColumn(name = "writer_id")
+    @JoinColumn(name = "user_id")
     @JsonBackReference
-    private Writer writer;
+    private User user;
 }

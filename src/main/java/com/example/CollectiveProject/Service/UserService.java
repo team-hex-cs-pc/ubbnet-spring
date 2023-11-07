@@ -1,5 +1,6 @@
 package com.example.CollectiveProject.Service;
 
+import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
 import com.example.CollectiveProject.Repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -28,13 +29,13 @@ public class UserService {
         return this.repository.findAll();
     }
 
-    public boolean exists(Integer id) { return this.repository.existsById(id); }
+    public boolean exists(Integer id) {
+        return this.repository.existsById(id);
+    }
 
-    public String deleteService(Integer id)
-    {
+    public String deleteService(Integer id) {
         User user = this.getEntityById(id);
-        if(user != null)
-        {
+        if (user != null) {
             this.repository.delete(user);
             return "User with id " + id + ".";
         }
@@ -43,8 +44,7 @@ public class UserService {
 
     public User updateService(Integer id, User newEntity) {
         User entityForUpdate = this.repository.findById(id).orElse(null);
-        if (entityForUpdate != null)
-        {
+        if (entityForUpdate != null) {
             entityForUpdate.setAge(newEntity.getAge());
             entityForUpdate.setName(newEntity.getName());
             entityForUpdate.setEmail(newEntity.getEmail());
@@ -52,6 +52,14 @@ public class UserService {
             entityForUpdate.setPassword(newEntity.getPassword());
             entityForUpdate.setGender(newEntity.getGender());
             return this.repository.save(entityForUpdate);
+        }
+        return null;
+    }
+
+    public List<Post> getPostsByAuthor(Integer writerId) {
+        User w = this.getEntityById(writerId);
+        if (w != null) {
+            return w.getPosts();
         }
         return null;
     }

@@ -37,3 +37,4 @@ build/
 
 # Ignore all files with ".override" extension
 *.override
+!/requests/
