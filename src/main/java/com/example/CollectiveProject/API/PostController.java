@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/post")
@@ -32,10 +33,18 @@ public class PostController {
 
     @GetMapping("/all")
     public ResponseEntity<Object> getAll() {
-        if (this.service.getAll().isEmpty()) {
-            return this.showMessage("There are no posts yet.", HttpStatus.NOT_FOUND); // 404
+        List<Post> posts = service.getAll();
+
+        if (posts.isEmpty()) {
+            return showMessage("There are no posts yet.", HttpStatus.NOT_FOUND);
         }
-        return this.showMessage(this.service.getAll(), HttpStatus.OK); // 200
+
+        // sort the posts by publicationDate in descending order
+        List<Post> sortedPosts = posts.stream()
+                .sorted((post1, post2) -> post2.getPublicationDate().compareTo(post1.getPublicationDate()))
+                .collect(Collectors.toList());
+
+        return showMessage(sortedPosts, HttpStatus.OK);
     }
 
     @GetMapping("/author/{id}")
