@@ -4,13 +4,16 @@ import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
 import com.example.CollectiveProject.Repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @AllArgsConstructor
-public class UserService {
+public class UserService  implements UserDetailsService {
     private UserRepository repository;
 
     public User addService(User entity) {
@@ -62,5 +65,17 @@ public class UserService {
             return w.getPosts();
         }
         return null;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = this.repository.findUserByEmail(email);
+
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username(user.getEmail())
+                .password(user.getPassword())
+                .build();
+
+        return userDetails;
     }
 }
