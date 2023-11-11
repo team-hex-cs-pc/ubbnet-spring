@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 public class JwtUtilities {
-    private final Key secret_key = MacProvider.generateKey(SignatureAlgorithm.HS256);
+    private final String secret_key = "GDNJNSDFKTOP43";
     private long accessTokenValidityInMinutes = 60 * 24 * 7;
 
     private final JwtParser jwtParser;

@@ -1,5 +1,7 @@
 package com.example.CollectiveProject.Config;
 
+import com.example.CollectiveProject.Domain.User;
+import com.example.CollectiveProject.Service.UserService;
 import com.example.CollectiveProject.Utilities.JwtUtilities;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -23,34 +25,35 @@ import java.util.Map;
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtUtilities jwtUtilities;
-
-    public JwtAuthorizationFilter(JwtUtilities jwtUtil) {
+    private final UserService userService;
+    public JwtAuthorizationFilter(JwtUtilities jwtUtil, UserService userService) {
         this.jwtUtilities = jwtUtil;
+        this.userService = userService;
     }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException, ServletException, IOException {
         Map<String, Object> errorDetails = new HashMap<>();
 
         try {
             String accessToken = jwtUtilities.resolveToken(request);
-            if (accessToken == null ) {
+            if (accessToken == null) {
                 filterChain.doFilter(request, response);
                 return;
             }
-            System.out.println("token : "+accessToken);
             Claims claims = jwtUtilities.resolveClaims(request);
 
-            if(claims != null & jwtUtilities.validateClaims(claims)){
+            if (claims != null & jwtUtilities.validateClaims(claims)) {
                 String email = claims.getSubject();
-                System.out.println("email : "+email);
+                User user = userService.getUserByEmail(email);
                 Authentication authentication =
-                        new UsernamePasswordAuthenticationToken(email,"",new ArrayList<>());
+                        new UsernamePasswordAuthenticationToken(email, user, new ArrayList<>());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             errorDetails.put("message", "Authentication Error");
-            errorDetails.put("details",e.getMessage());
+            errorDetails.put("details", e.getMessage());
             response.setStatus(HttpStatus.FORBIDDEN.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
