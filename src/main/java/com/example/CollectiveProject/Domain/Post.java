@@ -8,12 +8,14 @@ import java.util.Date;
 
 @Entity
 @Data
-@Table
+@Table(name = "POSTS_TABLE")
 public class Post {
     @Id
     @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer postId;
+    @Column(unique = true)
+    private String postReference;
     @Column
     private String title;
     @Column
