@@ -2,8 +2,10 @@ package com.example.CollectiveProject.Service;
 
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
+import com.example.CollectiveProject.Mapper.UserMapper;
 import com.example.CollectiveProject.Repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,6 +13,9 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class UserService {
+    @Autowired
+    private UserMapper userMapper;
+    @Autowired
     private UserRepository repository;
 
     public User addService(User entity) {
@@ -45,8 +50,9 @@ public class UserService {
     public User updateService(Integer id, User newEntity) {
         User entityForUpdate = this.repository.findById(id).orElse(null);
         if (entityForUpdate != null) {
-            entityForUpdate.setAge(newEntity.getAge());
-            entityForUpdate.setName(newEntity.getName());
+            entityForUpdate.setBirthdate(newEntity.getBirthdate());
+            entityForUpdate.setFirstName(newEntity.getFirstName());
+            entityForUpdate.setLastName(newEntity.getLastName());
             entityForUpdate.setEmail(newEntity.getEmail());
             entityForUpdate.setUsername(newEntity.getUsername());
             entityForUpdate.setPassword(newEntity.getPassword());
