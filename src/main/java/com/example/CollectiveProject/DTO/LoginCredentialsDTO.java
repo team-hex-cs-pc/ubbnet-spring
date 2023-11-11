@@ -1,9 +1,10 @@
 package com.example.CollectiveProject.DTO;
 
 
+import lombok.Data;
 import lombok.Getter;
 
-@Getter
+@Data
 public class LoginCredentialsDTO {
     private String email;
     private String password;

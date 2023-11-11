@@ -2,13 +2,11 @@ package com.example.CollectiveProject.DTO;
 
 import com.example.CollectiveProject.Domain.Post;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 public class UserWithoutCredentialsDTO {
     private String name;
