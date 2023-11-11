@@ -1,7 +1,7 @@
 package com.example.CollectiveProject.API;
 
 import com.example.CollectiveProject.DTO.LoginCredentialsDTO;
-import com.example.CollectiveProject.DTO.UserWithoutCredentialsDTO;
+import com.example.CollectiveProject.DTO.UserRequestDTO;
 import com.example.CollectiveProject.DTO.UserResponseDTO;
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
@@ -33,14 +33,14 @@ public class UserController {
     private JwtUtilities jwtUtil;
     private AuthenticationManager authenticationManager;
 
-    @PostMapping("/add")
-    public User add(@RequestBody User newEntity) {
-        return this.service.addService(newEntity);
-    }
-
-    @PostMapping("/all")
-    public List<User> addAll(@RequestBody List<User> list) {
-        return this.service.addAllService(list);
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody UserRequestDTO user) {
+        if(this.service.registerUser(user)) {
+            return ResponseEntity.ok("User registered successfully");
+        }
+        else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User already exists");
+        }
     }
 
     @PostMapping("/login")
@@ -55,9 +55,9 @@ public class UserController {
             return ResponseEntity.ok(token);
 
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid username or password");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid username or password");
         } catch (NotFoundException | UsernameNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
@@ -66,44 +66,48 @@ public class UserController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Object> getAll() {
-        if (this.service.getAll().isEmpty()) {
+    public ResponseEntity<?> getAllUsers() {
+
+        List <UserResponseDTO> usersResponseList = this.service.getAllUsers().stream().map(userMapper::userToResponseDto).toList();
+
+        if (this.service.getAllUsers().isEmpty()) {
             return this.showMessage("There are no users yet.", HttpStatus.NOT_FOUND); // 404
         }
-        return this.showMessage(this.service.getAll(), HttpStatus.OK); // 200
+        return this.showMessage(usersResponseList, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Object> getById(@PathVariable("id") Integer id) {
-        User user = this.service.getEntityById(id);
+    public ResponseEntity<?> getUserById(@PathVariable("id") Integer id) {
+        User user = this.service.getUserById(id);
+        UserResponseDTO userResponseDTO = userMapper.userToResponseDto(user);
         if (user != null) {
-            return ResponseEntity.ok(user); // 200
+            return ResponseEntity.ok(userResponseDTO); // 200
         } else {
-            String errorMessage = "User with id " + id + " was not found.";
-            return this.showMessage(errorMessage, HttpStatus.NOT_FOUND); // 404
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!"); // 404
         }
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Object> delete(@PathVariable("id") Integer id) {
-        String deleteMessage;
-        HttpStatus status;
-        if (this.service.exists(id)) {
-            this.service.deleteService(id);
-            deleteMessage = "User with id " + id + " was successfully deleted.";
-            status = HttpStatus.OK; // 200
-        } else {
-            deleteMessage = "User with id " + id + " was not found.";
-            status = HttpStatus.NOT_FOUND; // 404
+    public ResponseEntity<?> deleteUser(@PathVariable("id") Integer id) {
+        if (this.service.deleteUser(id)) {
+            return ResponseEntity.ok("Account deleted successfully!");
         }
-        return this.showMessage(deleteMessage, status);
+        else
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Deletion failed!");
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Object> update(@PathVariable("id") Integer id, @RequestBody User entity) {
-        User user = this.service.updateService(id, entity);
-        if (user != null) {
-            return ResponseEntity.status(HttpStatus.OK).body(user); // 200
+    public ResponseEntity<?> updateUser(@PathVariable("id") Integer id, @RequestBody UserRequestDTO entity) {
+        User userToUpdate = userMapper.userRequestDtoToEntity(entity);
+
+        User userToUpdatePosts = service.getUserById(id);
+        List<Post> posts = userToUpdatePosts.getPosts();
+
+        User newUser = this.service.updateUser(id, userToUpdate);
+        service.UpdateUserPosts(id, posts);
+
+        if (newUser != null) {
+            return ResponseEntity.ok("User updated successfully");
         } else {
             String errorMessage = "The user with id " + id + " was not found.";
             return this.showMessage(errorMessage, HttpStatus.NOT_FOUND); // 404
@@ -112,25 +116,16 @@ public class UserController {
 
     @GetMapping("/info")
     public ResponseEntity<?> getAllWithoutCredentials() {
-        List<User> users = this.service.getAll();
+        List<User> users = this.service.getAllUsers();
         if (users.isEmpty()) {
             return showMessage("There are no users yet.", HttpStatus.NOT_FOUND); // 404
         }
-
         return new ResponseEntity<>(userMapper.userToResponseDto(users.get(0)), HttpStatus.OK);
-
-//        UserMapper mapper = new UserMapper();
-//        Set<UserWithoutCredentialsDTO> all = new HashSet<>();
-//        for (User user : users) {
-//            all.add(mapper.to_userWithoutCredentialsDTO(user));
-//        }
-//        return showMessage(all, HttpStatus.OK); // 200
-//        return null;
     }
 
-    @GetMapping("/posts/{id}")
-    public ResponseEntity<Object> getPosts(@PathVariable("id") Integer id) {
-        List<Post> posts = this.service.getPostsByAuthor(id);
+    @GetMapping("{id}/posts")
+    public ResponseEntity<?> getPostsByUser(@PathVariable("id") Integer id) {
+        List<Post> posts = this.service.getPostsByUser(id);
         if (posts.isEmpty()) {
             String message = "There are no posts.";
             this.showMessage(message, HttpStatus.NOT_FOUND); // 404

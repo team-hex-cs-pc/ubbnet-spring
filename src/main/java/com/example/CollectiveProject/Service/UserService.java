@@ -1,5 +1,6 @@
 package com.example.CollectiveProject.Service;
 
+import com.example.CollectiveProject.DTO.UserRequestDTO;
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
 import com.example.CollectiveProject.Exceptions.NotFoundException;
@@ -23,36 +24,38 @@ public class UserService  implements UserDetailsService {
     @Autowired
     private UserRepository repository;
 
-    public User addService(User entity) {
-        return this.repository.save(entity);
+    public boolean registerUser(UserRequestDTO userRequestDTO) {
+        User user = userMapper.userRequestDtoToEntity(userRequestDTO);
+        try {
+            this.repository.save(user);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
-    public List<User> addAllService(List<User> entities) {
-        return this.repository.saveAll(entities);
-    }
-
-    public User getEntityById(Integer id) {
+    public User getUserById(Integer id) {
         return this.repository.findById(id).orElse(null);
     }
 
-    public List<User> getAll() {
+    public List<User> getAllUsers() {
         return this.repository.findAll();
     }
 
-    public boolean exists(Integer id) {
+    public boolean userExists(Integer id) {
         return this.repository.existsById(id);
     }
 
-    public String deleteService(Integer id) {
-        User user = this.getEntityById(id);
+    public boolean deleteUser(Integer id) {
+        User user = this.getUserById(id);
         if (user != null) {
             this.repository.delete(user);
-            return "User with id " + id + ".";
+            return true;
         }
-        return "There is no User with the id " + id + '.';
+        return false;
     }
 
-    public User updateService(Integer id, User newEntity) {
+    public User updateUser(Integer id, User newEntity) {
         User entityForUpdate = this.repository.findById(id).orElse(null);
         if (entityForUpdate != null) {
             entityForUpdate.setBirthdate(newEntity.getBirthdate());
@@ -67,10 +70,10 @@ public class UserService  implements UserDetailsService {
         return null;
     }
 
-    public List<Post> getPostsByAuthor(Integer writerId) {
-        User w = this.getEntityById(writerId);
-        if (w != null) {
-            return w.getPosts();
+    public List<Post> getPostsByUser(Integer writerId) {
+        User user = this.getUserById(writerId);
+        if (user != null) {
+            return user.getPosts();
         }
         return null;
     }
@@ -81,6 +84,12 @@ public class UserService  implements UserDetailsService {
             throw new NotFoundException("User not found");
         }
         return user;
+    }
+
+    public void UpdateUserPosts(Integer userId, List<Post> posts) {
+        User user = this.getUserById(userId);
+        user.setPosts(posts);
+        this.repository.save(user);
     }
 
     @Override
