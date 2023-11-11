@@ -1,5 +1,8 @@
 package com.example.CollectiveProject.DTO;
 
+import lombok.Data;
+
+@Data
 public class PostResponseDTO {
     private String postReference;
     private String title;

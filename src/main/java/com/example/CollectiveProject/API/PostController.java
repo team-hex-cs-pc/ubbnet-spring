@@ -2,6 +2,8 @@ package com.example.CollectiveProject.API;
 
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
+import com.example.CollectiveProject.DTO.PostRequestDTO;
+import com.example.CollectiveProject.DTO.PostResponseDTO;
 import com.example.CollectiveProject.Service.PostService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,19 +19,24 @@ import java.util.stream.Collectors;
 @RequestMapping("/post")
 @AllArgsConstructor
 public class PostController {
-    private PostService service;
+    private final PostService service;
 
     @PostMapping("/add")
-    public Post add(@RequestBody Post newEntity) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getCredentials();
-        newEntity.setUser(user);
-        return this.service.addService(newEntity);
+    public ResponseEntity<Object> add(@RequestBody PostRequestDTO postRequestDTO) {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        User user = (User) authentication.getCredentials();
+
+        PostResponseDTO responseDTO = service.addService(postRequestDTO, null);
+        return showMessage(responseDTO, HttpStatus.CREATED);
     }
 
     @PostMapping("/all")
-    public List<Post> addAll(@RequestBody List<Post> list) {
-        return this.service.addAllService(list);
+    public ResponseEntity<Object> addAll(@RequestBody List<PostRequestDTO> postRequestDTOs) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) authentication.getCredentials();
+
+        List<PostResponseDTO> responseDTOs = service.addAllService(postRequestDTOs, user);
+        return showMessage(responseDTOs, HttpStatus.CREATED);
     }
 
     public ResponseEntity<Object> showMessage(Object messageOrEntity, HttpStatus status) {
@@ -38,14 +45,14 @@ public class PostController {
 
     @GetMapping("/all")
     public ResponseEntity<Object> getAll() {
-        List<Post> posts = service.getAll();
+        List<PostResponseDTO> posts = service.getAll();
 
         if (posts.isEmpty()) {
             return showMessage("There are no posts yet.", HttpStatus.NOT_FOUND);
         }
 
         // sort the posts by publicationDate in descending order
-        List<Post> sortedPosts = posts.stream()
+        List<PostResponseDTO> sortedPosts = posts.stream()
                 .sorted((post1, post2) -> post2.getPublicationDate().compareTo(post1.getPublicationDate()))
                 .collect(Collectors.toList());
 
@@ -65,9 +72,9 @@ public class PostController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Object> getById(@PathVariable("id") Integer id) {
-        Post NewsPost = this.service.getEntityById(id);
-        if (NewsPost != null) {
-            return ResponseEntity.ok(NewsPost); // 200
+        PostResponseDTO postResponseDTO = this.service.getEntityById(id);
+        if (postResponseDTO != null) {
+            return ResponseEntity.ok(postResponseDTO); // 200
         } else {
             String errorMessage = "Post with id " + id + " was not found.";
             return this.showMessage(errorMessage, HttpStatus.NOT_FOUND); // 404
@@ -90,10 +97,10 @@ public class PostController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Object> update(@PathVariable("id") Integer id, @RequestBody Post entity) {
-        Post NewsPost = this.service.updateService(id, entity);
-        if (NewsPost != null) {
-            return ResponseEntity.status(HttpStatus.OK).body(NewsPost); // 200
+    public ResponseEntity<Object> update(@PathVariable("id") Integer id, @RequestBody PostRequestDTO postRequestDTO) {
+        PostResponseDTO postResponseDTO = this.service.updateService(id, postRequestDTO);
+        if (postResponseDTO != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(postResponseDTO); // 200
         } else {
             String errorMessage = "The post with id " + id + " was not found.";
             return this.showMessage(errorMessage, HttpStatus.NOT_FOUND); // 404
