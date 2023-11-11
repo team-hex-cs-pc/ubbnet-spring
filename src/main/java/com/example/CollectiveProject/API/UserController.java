@@ -1,5 +1,6 @@
 package com.example.CollectiveProject.API;
 
+import com.example.CollectiveProject.DTO.AuthResponseDTO;
 import com.example.CollectiveProject.DTO.LoginCredentialsDTO;
 import com.example.CollectiveProject.DTO.UserWithoutCredentialsDTO;
 import com.example.CollectiveProject.DTO.UserResponseDTO;
@@ -44,7 +45,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginCredentialsDTO credentialsDTO) {
+    public ResponseEntity<?> login(@RequestBody LoginCredentialsDTO credentialsDTO) {
         try {
             Authentication authentication =
                     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentialsDTO.getEmail(), credentialsDTO.getPassword()));
@@ -52,7 +53,7 @@ public class UserController {
             User user = service.getUserByEmail(email);
             String token = jwtUtil.createToken(user);
 
-            return ResponseEntity.ok(token);
+            return ResponseEntity.ok(new AuthResponseDTO(token));
 
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid username or password");
