@@ -23,10 +23,10 @@ public class PostController {
 
     @PostMapping("/add")
     public ResponseEntity<Object> add(@RequestBody PostRequestDTO postRequestDTO) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getCredentials();
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        User user = (User) authentication.getCredentials();
 
-        PostResponseDTO responseDTO = service.addService(postRequestDTO, user);
+        PostResponseDTO responseDTO = service.addService(postRequestDTO, null);
         return showMessage(responseDTO, HttpStatus.CREATED);
     }
 

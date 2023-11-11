@@ -36,7 +36,8 @@ public class SecurityConfig {
 
         http.authorizeRequests()
                 .requestMatchers("/user/**").permitAll()
-                .requestMatchers("/post/**").authenticated()
+//                .requestMatchers("/post/**").authenticated()
+                .requestMatchers("/post/**").permitAll() // temporary fix - enables testing Post entity
                 .and().addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class).authorizeRequests()
                 .and().csrf(csrf -> csrf.disable());
 
