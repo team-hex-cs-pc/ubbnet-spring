@@ -2,6 +2,7 @@ package com.example.CollectiveProject.API;
 
 import com.example.CollectiveProject.DTO.LoginCredentialsDTO;
 import com.example.CollectiveProject.DTO.UserWithoutCredentialsDTO;
+import com.example.CollectiveProject.DTO.UserResponseDTO;
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
 import com.example.CollectiveProject.Exceptions.NotFoundException;
@@ -9,6 +10,7 @@ import com.example.CollectiveProject.Mapper.UserMapper;
 import com.example.CollectiveProject.Service.UserService;
 import com.example.CollectiveProject.Utilities.JwtUtilities;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -18,15 +20,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/user")
 @AllArgsConstructor
 public class UserController {
+    @Autowired
     private UserService service;
+    @Autowired
+    private UserMapper userMapper;
     private JwtUtilities jwtUtil;
     private AuthenticationManager authenticationManager;
 
@@ -108,18 +111,21 @@ public class UserController {
     }
 
     @GetMapping("/info")
-    public ResponseEntity<Object> getAllWithoutCredentials() {
+    public ResponseEntity<?> getAllWithoutCredentials() {
         List<User> users = this.service.getAll();
         if (users.isEmpty()) {
             return showMessage("There are no users yet.", HttpStatus.NOT_FOUND); // 404
         }
 
-        UserMapper mapper = new UserMapper();
-        Set<UserWithoutCredentialsDTO> all = new HashSet<>();
-        for (User user : users) {
-            all.add(mapper.to_userWithoutCredentialsDTO(user));
-        }
-        return showMessage(all, HttpStatus.OK); // 200
+        return new ResponseEntity<>(userMapper.userToResponseDto(users.get(0)), HttpStatus.OK);
+
+//        UserMapper mapper = new UserMapper();
+//        Set<UserWithoutCredentialsDTO> all = new HashSet<>();
+//        for (User user : users) {
+//            all.add(mapper.to_userWithoutCredentialsDTO(user));
+//        }
+//        return showMessage(all, HttpStatus.OK); // 200
+//        return null;
     }
 
     @GetMapping("/posts/{id}")
