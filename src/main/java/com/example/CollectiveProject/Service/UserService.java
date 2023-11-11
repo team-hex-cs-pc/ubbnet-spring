@@ -55,7 +55,7 @@ public class UserService  implements UserDetailsService {
         return false;
     }
 
-    public User updateUser(Integer id, User newEntity) {
+    public boolean updateUser(Integer id, User newEntity) {
         User entityForUpdate = this.repository.findById(id).orElse(null);
         if (entityForUpdate != null) {
             entityForUpdate.setBirthdate(newEntity.getBirthdate());
@@ -65,9 +65,10 @@ public class UserService  implements UserDetailsService {
             entityForUpdate.setUsername(newEntity.getUsername());
             entityForUpdate.setPassword(newEntity.getPassword());
             entityForUpdate.setGender(newEntity.getGender());
-            return this.repository.save(entityForUpdate);
+            this.repository.save(entityForUpdate);
+            return true;
         }
-        return null;
+        return false;
     }
 
     public List<Post> getPostsByUser(Integer writerId) {

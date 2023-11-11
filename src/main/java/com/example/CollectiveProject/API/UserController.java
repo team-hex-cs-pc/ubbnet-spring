@@ -100,17 +100,10 @@ public class UserController {
     public ResponseEntity<?> updateUser(@PathVariable("id") Integer id, @RequestBody UserRequestDTO entity) {
         User userToUpdate = userMapper.userRequestDtoToEntity(entity);
 
-        User userToUpdatePosts = service.getUserById(id);
-        List<Post> posts = userToUpdatePosts.getPosts();
-
-        User newUser = this.service.updateUser(id, userToUpdate);
-        service.UpdateUserPosts(id, posts);
-
-        if (newUser != null) {
+        if (this.service.updateUser(id, userToUpdate)) {
             return ResponseEntity.ok("User updated successfully");
         } else {
-            String errorMessage = "The user with id " + id + " was not found.";
-            return this.showMessage(errorMessage, HttpStatus.NOT_FOUND); // 404
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!");
         }
     }
 
