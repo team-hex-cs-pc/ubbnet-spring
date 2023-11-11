@@ -10,16 +10,18 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final UserService userDetailsService;
+    private final JwtAuthorizationFilter jwtAuthorizationFilter;
 
-    public SecurityConfig(UserService userService) {
+    public SecurityConfig(UserService userService, JwtAuthorizationFilter jwtAuthorizationFilter) {
         this.userDetailsService = userService;
-
+        this.jwtAuthorizationFilter = jwtAuthorizationFilter;
     }
 
     @Bean
@@ -30,13 +32,13 @@ public class SecurityConfig {
         return authenticationManagerBuilder.build();
     }
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http.authorizeRequests()
-                .requestMatchers("/rest/auth/**").permitAll()
-                .anyRequest().authenticated();
+                .requestMatchers("/**").permitAll()
+                .and().addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class).authorizeRequests()
+                .and().csrf(csrf -> csrf.disable());
 
         return http.build();
     }

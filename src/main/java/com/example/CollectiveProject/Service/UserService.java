@@ -2,6 +2,7 @@ package com.example.CollectiveProject.Service;
 
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
+import com.example.CollectiveProject.Exceptions.NotFoundException;
 import com.example.CollectiveProject.Repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -65,6 +66,14 @@ public class UserService  implements UserDetailsService {
             return w.getPosts();
         }
         return null;
+    }
+
+    public User getUserByEmail(String email) throws NotFoundException {
+        User user = this.repository.findUserByEmail(email);
+        if(user == null){
+            throw new NotFoundException("User not found");
+        }
+        return user;
     }
 
     @Override

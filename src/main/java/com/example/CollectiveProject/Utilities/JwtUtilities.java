@@ -2,21 +2,26 @@ package com.example.CollectiveProject.Utilities;
 
 import com.example.CollectiveProject.Domain.User;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.impl.crypto.MacProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Component
 public class JwtUtilities {
-    private final String secret_key = "FJSDNFJKSDFKJSDFKJSDNF";
-    private long accessTokenValidity = 60 * 60 * 1000;
+    private final Key secret_key = MacProvider.generateKey(SignatureAlgorithm.HS256);
+    private long accessTokenValidityInMinutes = 60 * 24 * 7;
 
     private final JwtParser jwtParser;
 
     private final String TOKEN_HEADER = "Authorization";
     private final String TOKEN_PREFIX = "Bearer ";
+
 
     public JwtUtilities() {
         this.jwtParser = Jwts.parser().setSigningKey(secret_key);
@@ -27,9 +32,11 @@ public class JwtUtilities {
         claims.put("email", user.getEmail());
         claims.put("id", user.getUserId());
         Date tokenCreateTime = new Date();
-        Date tokenValidity = new Date(tokenCreateTime.getTime() + TimeUnit.MINUTES.toMillis(accessTokenValidity));
+        Date tokenValidity = new Date(tokenCreateTime.getTime() + TimeUnit.MINUTES.toMillis(accessTokenValidityInMinutes));
         return Jwts.builder()
                 .setClaims(claims)
+                .setIssuer("localhost:8080")
+                .setAudience("localhost:4000")
                 .setExpiration(tokenValidity)
                 .signWith(SignatureAlgorithm.HS256, secret_key)
                 .compact();

@@ -1,13 +1,21 @@
 package com.example.CollectiveProject.API;
 
+import com.example.CollectiveProject.DTO.LoginCredentialsDTO;
 import com.example.CollectiveProject.DTO.UserWithoutCredentialsDTO;
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
+import com.example.CollectiveProject.Exceptions.NotFoundException;
 import com.example.CollectiveProject.Mapper.UserMapper;
 import com.example.CollectiveProject.Service.UserService;
+import com.example.CollectiveProject.Utilities.JwtUtilities;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashSet;
@@ -19,6 +27,8 @@ import java.util.Set;
 @AllArgsConstructor
 public class UserController {
     private UserService service;
+    private JwtUtilities jwtUtil;
+    private AuthenticationManager authenticationManager;
 
     @PostMapping("/add")
     public User add(@RequestBody User newEntity) {
@@ -28,6 +38,24 @@ public class UserController {
     @PostMapping("/all")
     public List<User> addAll(@RequestBody List<User> list) {
         return this.service.addAllService(list);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginCredentialsDTO credentialsDTO) {
+        try {
+            Authentication authentication =
+                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentialsDTO.getEmail(), credentialsDTO.getPassword()));
+            String email = authentication.getName();
+            User user = service.getUserByEmail(email);
+            String token = jwtUtil.createToken(user);
+
+            return ResponseEntity.ok(token);
+
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid username or password");
+        } catch (NotFoundException | UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     public ResponseEntity<Object> showMessage(Object messageOrEntity, HttpStatus status) {
