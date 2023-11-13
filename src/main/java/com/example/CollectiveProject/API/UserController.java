@@ -1,6 +1,7 @@
 package com.example.CollectiveProject.API;
 
 import com.example.CollectiveProject.DTO.LoginCredentialsDTO;
+import com.example.CollectiveProject.DTO.UserRequestDTO;
 import com.example.CollectiveProject.DTO.UserWithoutCredentialsDTO;
 import com.example.CollectiveProject.DTO.UserResponseDTO;
 import com.example.CollectiveProject.Domain.Post;
@@ -23,33 +24,41 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 @AllArgsConstructor
 public class UserController {
     @Autowired
-    private UserService service;
+    private UserService userService;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
     private JwtUtilities jwtUtil;
+    @Autowired
     private AuthenticationManager authenticationManager;
 
-    @PostMapping("/add")
-    public User add(@RequestBody User newEntity) {
-        return this.service.addService(newEntity);
+    @PostMapping("/register")
+    public ResponseEntity<?> add(@RequestBody UserRequestDTO userRequest) {
+        try {
+            return new ResponseEntity<>(userService.addService(userRequest), HttpStatus.CREATED);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
     }
 
     @PostMapping("/all")
     public List<User> addAll(@RequestBody List<User> list) {
-        return this.service.addAllService(list);
+        return this.userService.addAllService(list);
     }
 
+
+    // TODO: less logic in controller
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginCredentialsDTO credentialsDTO) {
         try {
             Authentication authentication =
                     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentialsDTO.getEmail(), credentialsDTO.getPassword()));
             String email = authentication.getName();
-            User user = service.getUserByEmail(email);
+            User user = userService.getUserByEmail(email);
             String token = jwtUtil.createToken(user);
 
             return ResponseEntity.ok(token);
@@ -65,76 +74,58 @@ public class UserController {
         return ResponseEntity.status(status).body(messageOrEntity);
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<Object> getAll() {
-        if (this.service.getAll().isEmpty()) {
-            return this.showMessage("There are no users yet.", HttpStatus.NOT_FOUND); // 404
-        }
-        return this.showMessage(this.service.getAll(), HttpStatus.OK); // 200
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Object> getById(@PathVariable("id") Integer id) {
-        User user = this.service.getEntityById(id);
-        if (user != null) {
-            return ResponseEntity.ok(user); // 200
-        } else {
-            String errorMessage = "User with id " + id + " was not found.";
-            return this.showMessage(errorMessage, HttpStatus.NOT_FOUND); // 404
+    @GetMapping
+    public ResponseEntity<?> getAll() {
+        try {
+            return new ResponseEntity<>(userService.getAll(), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Object> delete(@PathVariable("id") Integer id) {
-        String deleteMessage;
-        HttpStatus status;
-        if (this.service.exists(id)) {
-            this.service.deleteService(id);
-            deleteMessage = "User with id " + id + " was successfully deleted.";
-            status = HttpStatus.OK; // 200
-        } else {
-            deleteMessage = "User with id " + id + " was not found.";
-            status = HttpStatus.NOT_FOUND; // 404
-        }
-        return this.showMessage(deleteMessage, status);
-    }
-
-    @PutMapping("/update/{id}")
-    public ResponseEntity<Object> update(@PathVariable("id") Integer id, @RequestBody User entity) {
-        User user = this.service.updateService(id, entity);
-        if (user != null) {
-            return ResponseEntity.status(HttpStatus.OK).body(user); // 200
-        } else {
-            String errorMessage = "The user with id " + id + " was not found.";
-            return this.showMessage(errorMessage, HttpStatus.NOT_FOUND); // 404
+    @GetMapping("/{username}")
+    public ResponseEntity<?> getByUsername(@PathVariable String username) {
+        try {
+            return new ResponseEntity<>(userService.getUserByUsername(username), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
     }
 
-    @GetMapping("/info")
-    public ResponseEntity<?> getAllWithoutCredentials() {
-        List<User> users = this.service.getAll();
-        if (users.isEmpty()) {
-            return showMessage("There are no users yet.", HttpStatus.NOT_FOUND); // 404
+    @DeleteMapping("/{username}")
+    public ResponseEntity<?> delete(@PathVariable String username) {
+        try {
+            return new ResponseEntity<>(userService.deleteService(username), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
-
-        return new ResponseEntity<>(userMapper.userToResponseDto(users.get(0)), HttpStatus.OK);
-
-//        UserMapper mapper = new UserMapper();
-//        Set<UserWithoutCredentialsDTO> all = new HashSet<>();
-//        for (User user : users) {
-//            all.add(mapper.to_userWithoutCredentialsDTO(user));
-//        }
-//        return showMessage(all, HttpStatus.OK); // 200
-//        return null;
     }
 
-    @GetMapping("/posts/{id}")
-    public ResponseEntity<Object> getPosts(@PathVariable("id") Integer id) {
-        List<Post> posts = this.service.getPostsByAuthor(id);
-        if (posts.isEmpty()) {
-            String message = "There are no posts.";
-            this.showMessage(message, HttpStatus.NOT_FOUND); // 404
+    @PutMapping("/{username}")
+    public ResponseEntity<?> update(@PathVariable String username, @RequestBody UserRequestDTO newUser) {
+        try {
+            return new ResponseEntity<>(userService.updateService(username, newUser), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
-        return this.showMessage(posts, HttpStatus.OK); // 200
+    }
+
+    @GetMapping("/posts/{username}")
+    public ResponseEntity<?> getPosts(@PathVariable String username) {
+        try {
+            return new ResponseEntity<>(userService.getPostsByUser(username), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
     }
 }

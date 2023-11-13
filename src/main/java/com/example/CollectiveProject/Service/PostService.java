@@ -1,12 +1,21 @@
 package com.example.CollectiveProject.Service;
 
+import com.example.CollectiveProject.DTO.UserRequestDTO;
+import com.example.CollectiveProject.DTO.UserResponseDTO;
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
+import com.example.CollectiveProject.Exceptions.NotFoundException;
+import com.example.CollectiveProject.Mapper.UserMapper;
 import com.example.CollectiveProject.Repository.PostRepository;
 import com.example.CollectiveProject.DTO.PostRequestDTO;
 import com.example.CollectiveProject.DTO.PostResponseDTO;
 import com.example.CollectiveProject.Mapper.PostMapper;
+import com.example.CollectiveProject.Repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,14 +24,37 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class PostService {
-    private final PostRepository repository;
+    @Autowired
+    private final PostRepository postRepository;
+    @Autowired
+    private final UserRepository userRepository;
+    @Autowired
     private final PostMapper postMapper;
+    @Autowired
+    private final UserMapper userMapper;
 
-    public PostResponseDTO addService(PostRequestDTO postRequestDTO, User user) {
-        Post postEntity = postMapper.postRequestDtoToEntity(postRequestDTO);
-        postEntity.setUser(user); // Set the user obtained from the controller
-        Post savedPost = repository.save(postEntity);
-        return postMapper.postToResponseDto(savedPost);
+    public boolean addService(PostRequestDTO postRequestDTO) {
+        try {
+            // We will this to get the user that made the post
+
+//            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//            String username = authentication.getName();
+//            User user = userRepository.findUserByUsername(username);
+
+
+            // Just for tests atm; Will be changed with the code above
+            User user = userRepository.findUserByUsername(postRequestDTO.getUsername());
+
+
+            Post postEntity = postMapper.postRequestDtoToEntity(postRequestDTO);
+            postEntity.setPostReference("alabala"); // TODO: random
+            postEntity.setUser(user);
+
+            postRepository.save(postEntity);
+            return true;
+        } catch (Exception ex) {      // TODO: More custom exceptions
+            return false;
+        }
     }
 
     public List<PostResponseDTO> addAllService(List<PostRequestDTO> postRequestDTOs, User user) {
@@ -34,54 +66,72 @@ public class PostService {
                 })
                 .collect(Collectors.toList());
 
-        List<Post> savedPosts = repository.saveAll(postEntities);
+        List<Post> savedPosts = postRepository.saveAll(postEntities);
 
         return savedPosts.stream()
                 .map(postMapper::postToResponseDto)
                 .collect(Collectors.toList());
     }
 
-    public PostResponseDTO getEntityById(Integer id) {
-        Post post = repository.findById(id).orElse(null);
-        return (post != null) ? postMapper.postToResponseDto(post) : null;
+    public PostResponseDTO getEntityByPostReference(String postReference) throws Exception {
+        Post post = postRepository.findPostByPostReference(postReference);
+        if(post == null) {
+            throw new NotFoundException("Post not found!");
+        }
+
+        return postMapper.postToResponseDto(post);
     }
 
-    public List<PostResponseDTO> getAll() {
-        List<Post> posts = repository.findAll();
+    public List<PostResponseDTO> getAll() throws Exception {
+        List<Post> posts = postRepository.findAll();
+
+        if (posts.isEmpty()) {
+            throw new NotFoundException("No posts found!");
+        }
+
         return posts.stream()
                 .map(postMapper::postToResponseDto)
+                .sorted((post1, post2) -> post2.getPublicationDate().compareTo(post1.getPublicationDate()))
                 .collect(Collectors.toList());
     }
 
-    public boolean exists(Integer id) {
-        return repository.existsById(id);
-    }
+    public boolean deleteService(String postReference) throws Exception {
+        Post post = postRepository.findPostByPostReference(postReference);
 
-    public String deleteService(Integer id) {
-        Post post = repository.findById(id).orElse(null);
         if (post != null) {
-            repository.delete(post);
-            return "Article with id " + id + " was deleted.";
+            postRepository.delete(post);
+            return true;
+        } else {
+            throw new NotFoundException("Post not found!");
         }
-        return "There is no article with the id " + id + '.';
     }
 
-    public PostResponseDTO updateService(Integer id, PostRequestDTO newPostRequestDTO) {
-        Post postForUpdate = repository.findById(id).orElse(null);
-        if (postForUpdate != null) {
-            // Update fields as needed
-            postForUpdate.setTitle(newPostRequestDTO.getTitle());
-            postForUpdate.setContent(newPostRequestDTO.getContent());
-            postForUpdate.setCategory(newPostRequestDTO.getCategory());
+    public boolean updateService(String postReference, PostRequestDTO newPostRequestDTO) throws Exception {
+        Post postToUpdate = postRepository.findPostByPostReference(postReference);
 
-            Post updatedPost = repository.save(postForUpdate);
-            return postMapper.postToResponseDto(updatedPost);
+        if(postToUpdate == null) {
+            throw new NotFoundException("Post not found!");
         }
-        return null;
+
+        try {
+            Post newPost = postMapper.postRequestDtoToEntity(newPostRequestDTO);
+            newPost.setPostId(postToUpdate.getPostId());
+            newPost.setPostReference(postReference);
+            postRepository.save(newPost);
+            return true;
+        }
+        catch (Exception ex) {
+            return false;
+        }
     }
 
-    public User getAuthorByArticle(Integer postId) {
-        Post newsPost = repository.findById(postId).orElse(null);
-        return (newsPost != null) ? newsPost.getUser() : null;
+    public UserResponseDTO getUserByPost(String postReference) throws NotFoundException {
+        Post post = postRepository.findPostByPostReference(postReference);
+
+        if(post == null) {
+            throw new NotFoundException("Post not found!");
+        }
+
+        return userMapper.userToResponseDto(post.getUser());
     }
 }

@@ -4,5 +4,7 @@ import com.example.CollectiveProject.Domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Integer> {
-    public User findUserByEmail(String email);
+    User findUserByEmail(String email);
+
+    User findUserByUsername(String username);
 }

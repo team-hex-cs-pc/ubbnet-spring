@@ -10,10 +10,12 @@ import org.mapstruct.Mapping;
 public interface PostMapper {
 
     @Mapping(target = "postId", ignore = true)
-    @Mapping(target = "postReference", ignore = true)
-    @Mapping(target = "likes", ignore = true)
-    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "postReference", source = "postRequestDTO.postReference")
+    @Mapping(target = "title", source = "postRequestDTO.title")
+    @Mapping(target = "content", source = "postRequestDTO.content")
+    @Mapping(target = "category", source = "postRequestDTO.category")
     @Mapping(target = "publicationDate", ignore = true)
+    @Mapping(target = "user", ignore = true)
     Post postRequestDtoToEntity(PostRequestDTO postRequestDTO);
 
     @Mapping(target = "postReference", source = "post.postReference")
