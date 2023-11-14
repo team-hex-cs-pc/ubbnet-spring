@@ -1,24 +1,21 @@
 package com.example.CollectiveProject.Service;
 
-import com.example.CollectiveProject.DTO.UserRequestDTO;
+import com.example.CollectiveProject.DTO.PostRequestDTO;
+import com.example.CollectiveProject.DTO.PostResponseDTO;
 import com.example.CollectiveProject.DTO.UserResponseDTO;
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
 import com.example.CollectiveProject.Exceptions.NotFoundException;
+import com.example.CollectiveProject.Mapper.PostMapper;
 import com.example.CollectiveProject.Mapper.UserMapper;
 import com.example.CollectiveProject.Repository.PostRepository;
-import com.example.CollectiveProject.DTO.PostRequestDTO;
-import com.example.CollectiveProject.DTO.PostResponseDTO;
-import com.example.CollectiveProject.Mapper.PostMapper;
 import com.example.CollectiveProject.Repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,7 +44,10 @@ public class PostService {
 
 
             Post postEntity = postMapper.postRequestDtoToEntity(postRequestDTO);
-            postEntity.setPostReference("alabala"); // TODO: random
+
+            String randomPostReference = UUID.randomUUID().toString().replace("-", "");
+            postEntity.setPostReference(randomPostReference);
+
             postEntity.setUser(user);
 
             postRepository.save(postEntity);
@@ -58,24 +58,20 @@ public class PostService {
     }
 
     public List<PostResponseDTO> addAllService(List<PostRequestDTO> postRequestDTOs, User user) {
-        List<Post> postEntities = postRequestDTOs.stream()
-                .map(postRequestDTO -> {
-                    Post post = postMapper.postRequestDtoToEntity(postRequestDTO);
-                    post.setUser(user); // Set the user obtained from the controller
-                    return post;
-                })
-                .collect(Collectors.toList());
+        List<Post> postEntities = postRequestDTOs.stream().map(postRequestDTO -> {
+            Post post = postMapper.postRequestDtoToEntity(postRequestDTO);
+//                    post.setUser(user); // Set the user obtained from the controller
+            return post;
+        }).collect(Collectors.toList());
 
         List<Post> savedPosts = postRepository.saveAll(postEntities);
 
-        return savedPosts.stream()
-                .map(postMapper::postToResponseDto)
-                .collect(Collectors.toList());
+        return savedPosts.stream().map(postMapper::postToResponseDto).collect(Collectors.toList());
     }
 
     public PostResponseDTO getEntityByPostReference(String postReference) throws Exception {
         Post post = postRepository.findPostByPostReference(postReference);
-        if(post == null) {
+        if (post == null) {
             throw new NotFoundException("Post not found!");
         }
 
@@ -89,9 +85,8 @@ public class PostService {
             throw new NotFoundException("No posts found!");
         }
 
-        return posts.stream()
-                .map(postMapper::postToResponseDto)
-                .sorted((post1, post2) -> post2.getPublicationDate().compareTo(post1.getPublicationDate()))
+        return posts.stream().map(postMapper::postToResponseDto)
+//                .sorted((post1, post2) -> post2.getPublicationDate().compareTo(post1.getPublicationDate()))
                 .collect(Collectors.toList());
     }
 
@@ -109,7 +104,7 @@ public class PostService {
     public boolean updateService(String postReference, PostRequestDTO newPostRequestDTO) throws Exception {
         Post postToUpdate = postRepository.findPostByPostReference(postReference);
 
-        if(postToUpdate == null) {
+        if (postToUpdate == null) {
             throw new NotFoundException("Post not found!");
         }
 
@@ -119,8 +114,7 @@ public class PostService {
             newPost.setPostReference(postReference);
             postRepository.save(newPost);
             return true;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             return false;
         }
     }
@@ -128,7 +122,7 @@ public class PostService {
     public UserResponseDTO getUserByPost(String postReference) throws NotFoundException {
         Post post = postRepository.findPostByPostReference(postReference);
 
-        if(post == null) {
+        if (post == null) {
             throw new NotFoundException("Post not found!");
         }
 

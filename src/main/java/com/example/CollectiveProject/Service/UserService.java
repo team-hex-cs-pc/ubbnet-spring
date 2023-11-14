@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class UserService  implements UserDetailsService {
+public class UserService implements UserDetailsService {
     @Autowired
     private UserMapper userMapper;
     @Autowired
@@ -51,15 +51,13 @@ public class UserService  implements UserDetailsService {
             throw new NotFoundException("No users found!");
         }
 
-        return users.stream()
-                .map(userMapper::userToResponseDto)
-                .collect(Collectors.toList());
+        return users.stream().map(userMapper::userToResponseDto).collect(Collectors.toList());
     }
 
     public UserResponseDTO getUserByUsername(String username) throws NotFoundException {
         User user = userRepository.findUserByUsername(username);
 
-        if(user == null) {
+        if (user == null) {
             throw new NotFoundException("No user found!");
         }
 
@@ -69,7 +67,7 @@ public class UserService  implements UserDetailsService {
     public boolean deleteService(String username) throws NotFoundException {
         User user = userRepository.findUserByUsername(username);
 
-        if(user == null) {
+        if (user == null) {
             throw new NotFoundException("No user found!");
         } else {
             userRepository.delete(user);
@@ -80,7 +78,7 @@ public class UserService  implements UserDetailsService {
     public boolean updateService(String username, UserRequestDTO newEntity) throws NotFoundException {
         User userToUpdate = userRepository.findUserByUsername(username);
 
-        if(userToUpdate == null) {
+        if (userToUpdate == null) {
             throw new NotFoundException("Post not found!");
         }
 
@@ -89,8 +87,7 @@ public class UserService  implements UserDetailsService {
             newUser.setUserId(userToUpdate.getUserId());
             userRepository.save(newUser);
             return true;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             return false;
         }
     }
@@ -98,19 +95,17 @@ public class UserService  implements UserDetailsService {
     public List<PostResponseDTO> getPostsByUser(String username) throws NotFoundException {
         User user = userRepository.findUserByUsername(username);
 
-        if(user == null) {
+        if (user == null) {
             throw new NotFoundException("User not found!");
         } else {
             List<Post> userPosts = user.getPosts();
-            return userPosts.stream()
-                    .map(postMapper::postToResponseDto)
-                    .collect(Collectors.toList());
+            return userPosts.stream().map(postMapper::postToResponseDto).collect(Collectors.toList());
         }
     }
 
     public User getUserByEmail(String email) throws NotFoundException {
         User user = this.userRepository.findUserByEmail(email);
-        if(user == null){
+        if (user == null) {
             throw new NotFoundException("User not found");
         }
         return user;
@@ -120,10 +115,7 @@ public class UserService  implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = this.userRepository.findUserByEmail(email);
 
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .build();
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder().username(user.getEmail()).password(user.getPassword()).build();
 
         return userDetails;
     }

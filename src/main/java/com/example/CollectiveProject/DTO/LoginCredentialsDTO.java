@@ -2,7 +2,6 @@ package com.example.CollectiveProject.DTO;
 
 
 import lombok.Data;
-import lombok.Getter;
 
 @Data
 public class LoginCredentialsDTO {
