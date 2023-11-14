@@ -8,13 +8,13 @@ import java.util.Date;
 import java.util.Locale;
 
 public class CalendarUtils {
-    public Date convertStringToDate(String date) throws ParseException {
+    public static Date convertStringToDate(String date) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
 
         return formatter.parse(date);
     }
 
-    public String convertDateToString(String date) {
+    public static String convertDateToString(String date) {
         DateFormat df = new SimpleDateFormat(date);
 
         Date today = Calendar.getInstance().getTime();
