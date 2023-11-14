@@ -6,6 +6,9 @@ import com.example.CollectiveProject.DTO.PostResponseDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.Calendar;
+import java.util.Date;
+
 @Mapper(componentModel = "spring")
 public interface PostMapper {
 
@@ -14,9 +17,13 @@ public interface PostMapper {
     @Mapping(target = "title", source = "postRequestDTO.title")
     @Mapping(target = "content", source = "postRequestDTO.content")
     @Mapping(target = "category", source = "postRequestDTO.category")
-    @Mapping(target = "publicationDate", ignore = true)
+    @Mapping(target = "publicationDate", expression = "java(getCurrentDate())")
     @Mapping(target = "user", ignore = true)
     Post postRequestDtoToEntity(PostRequestDTO postRequestDTO);
+
+    default Date getCurrentDate() {
+        return Calendar.getInstance().getTime();
+    }
 
     @Mapping(target = "postReference", source = "post.postReference")
     @Mapping(target = "title", source = "post.title")

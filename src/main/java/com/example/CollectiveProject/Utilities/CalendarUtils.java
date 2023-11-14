@@ -12,13 +12,13 @@ import java.util.Locale;
 
 @NoArgsConstructor
 public class CalendarUtils {
-    public Date convertStringToDate(String date) throws ParseException {
+    public static Date convertStringToDate(String date) throws ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
 
         return formatter.parse(date);
     }
 
-    public String convertDateToString(Date date) {
+    public static String convertDateToString(Date date) {
         String pattern = "dd-MM-yyyy";
         DateFormat df = new SimpleDateFormat(pattern);
 
