@@ -66,14 +66,10 @@ public class UserController {
         }
     }
 
-    public ResponseEntity<Object> showMessage(Object messageOrEntity, HttpStatus status) {
-        return ResponseEntity.status(status).body(messageOrEntity);
-    }
-
     @GetMapping
-    public ResponseEntity<?> getAll() {
+    public ResponseEntity<?> getAll(@RequestParam(defaultValue = "0") int page) {
         try {
-            return new ResponseEntity<>(userService.getAll(), HttpStatus.OK);
+            return new ResponseEntity<>(userService.getAll(page), HttpStatus.OK);
         } catch (NotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         } catch (Exception ex) {

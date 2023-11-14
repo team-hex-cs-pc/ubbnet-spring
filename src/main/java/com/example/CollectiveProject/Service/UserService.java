@@ -10,13 +10,15 @@ import com.example.CollectiveProject.Mapper.PostMapper;
 import com.example.CollectiveProject.Mapper.UserMapper;
 import com.example.CollectiveProject.Repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.example.CollectiveProject.Utilities.Constants;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,14 +46,14 @@ public class UserService implements UserDetailsService {
         return this.userRepository.saveAll(entities);
     }
 
-    public List<UserResponseDTO> getAll() throws NotFoundException {
-        List<User> users = userRepository.findAll();
+    public Page<UserResponseDTO> getAll(int pageCount) throws NotFoundException {
+        Page<UserResponseDTO> users = userRepository.findAllUsers(PageRequest.of(pageCount, Constants.PAGE_SIZE));
 
-        if (users.isEmpty()) {
+        if (users.getContent().isEmpty()) {
             throw new NotFoundException("No users found!");
         }
 
-        return users.stream().map(userMapper::userToResponseDto).collect(Collectors.toList());
+        return users;
     }
 
     public UserResponseDTO getUserByUsername(String username) throws NotFoundException {
