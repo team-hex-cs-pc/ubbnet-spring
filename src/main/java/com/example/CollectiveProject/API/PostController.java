@@ -1,16 +1,14 @@
 package com.example.CollectiveProject.API;
 
-import com.example.CollectiveProject.Domain.User;
 import com.example.CollectiveProject.DTO.PostRequestDTO;
 import com.example.CollectiveProject.DTO.PostResponseDTO;
+import com.example.CollectiveProject.Domain.User;
 import com.example.CollectiveProject.Exceptions.NotFoundException;
 import com.example.CollectiveProject.Service.PostService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,8 +35,9 @@ public class PostController {
 
     @PostMapping("/all")
     public ResponseEntity<Object> addAll(@RequestBody List<PostRequestDTO> postRequestDTOs) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getCredentials();
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        User user = (User) authentication.getCredentials();
+        User user = null;
 
         List<PostResponseDTO> responseDTOs = postService.addAllService(postRequestDTOs, user);
         return showMessage(responseDTOs, HttpStatus.CREATED);

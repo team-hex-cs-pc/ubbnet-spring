@@ -2,12 +2,10 @@ package com.example.CollectiveProject.Utilities;
 
 import com.example.CollectiveProject.Domain.User;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.impl.crypto.MacProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -33,13 +31,7 @@ public class JwtUtilities {
         claims.put("id", user.getUserId());
         Date tokenCreateTime = new Date();
         Date tokenValidity = new Date(tokenCreateTime.getTime() + TimeUnit.MINUTES.toMillis(accessTokenValidityInMinutes));
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuer("localhost:8080")
-                .setAudience("localhost:4000")
-                .setExpiration(tokenValidity)
-                .signWith(SignatureAlgorithm.HS256, secret_key)
-                .compact();
+        return Jwts.builder().setClaims(claims).setIssuer("localhost:8080").setAudience("localhost:4000").setExpiration(tokenValidity).signWith(SignatureAlgorithm.HS256, secret_key).compact();
     }
 
     private Claims parseJwtClaims(String token) {

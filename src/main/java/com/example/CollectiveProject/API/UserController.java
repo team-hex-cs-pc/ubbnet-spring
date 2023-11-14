@@ -2,9 +2,6 @@ package com.example.CollectiveProject.API;
 
 import com.example.CollectiveProject.DTO.LoginCredentialsDTO;
 import com.example.CollectiveProject.DTO.UserRequestDTO;
-import com.example.CollectiveProject.DTO.UserWithoutCredentialsDTO;
-import com.example.CollectiveProject.DTO.UserResponseDTO;
-import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
 import com.example.CollectiveProject.Exceptions.NotFoundException;
 import com.example.CollectiveProject.Mapper.UserMapper;
@@ -55,8 +52,7 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginCredentialsDTO credentialsDTO) {
         try {
-            Authentication authentication =
-                    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentialsDTO.getEmail(), credentialsDTO.getPassword()));
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentialsDTO.getEmail(), credentialsDTO.getPassword()));
             String email = authentication.getName();
             User user = userService.getUserByEmail(email);
             String token = jwtUtil.createToken(user);

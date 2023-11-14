@@ -17,8 +17,7 @@ public class CalendarUtils {
     public String convertDateToString(String date) {
         DateFormat df = new SimpleDateFormat(date);
 
-        Date today = Calendar.getInstance()
-                .getTime();
+        Date today = Calendar.getInstance().getTime();
 
         String dateToString = df.format(today);
 

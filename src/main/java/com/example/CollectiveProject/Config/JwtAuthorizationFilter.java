@@ -26,6 +26,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtUtilities jwtUtilities;
     private final UserService userService;
+
     public JwtAuthorizationFilter(JwtUtilities jwtUtil, UserService userService) {
         this.jwtUtilities = jwtUtil;
         this.userService = userService;
@@ -46,8 +47,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             if (claims != null & jwtUtilities.validateClaims(claims)) {
                 String email = claims.getSubject();
                 User user = userService.getUserByEmail(email);
-                Authentication authentication =
-                        new UsernamePasswordAuthenticationToken(email, user, new ArrayList<>());
+                Authentication authentication = new UsernamePasswordAuthenticationToken(email, user, new ArrayList<>());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
 
