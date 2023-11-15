@@ -141,4 +141,28 @@ public class PostService {
 
         return userMapper.userToResponseDto(post.getUser());
     }
+
+    public boolean likePost(String postReference) throws NotFoundException {
+        Post post = postRepository.findPostByPostReference(postReference);
+
+        if (post == null) {
+            throw new NotFoundException("Post not found!");
+        }
+
+        post.setLikes(post.getLikes() + 1);
+        postRepository.save(post);
+        return true;
+    }
+
+    public boolean dislikePost(String postReference) throws NotFoundException {
+        Post post = postRepository.findPostByPostReference(postReference);
+
+        if (post == null) {
+            throw new NotFoundException("Post not found!");
+        }
+
+        post.setLikes(post.getLikes() - 1);
+        postRepository.save(post);
+        return true;
+    }
 }
