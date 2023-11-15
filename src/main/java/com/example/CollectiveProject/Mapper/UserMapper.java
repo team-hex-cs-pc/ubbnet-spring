@@ -13,8 +13,6 @@ import java.util.Date;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     @Mapping(target = "userId", ignore = true)
-
-
     @Mapping(target = "username", source = "userRequestDTO.username")
     @Mapping(target = "firstName", source = "userRequestDTO.firstName")
     @Mapping(target = "lastName", source = "userRequestDTO.lastName")

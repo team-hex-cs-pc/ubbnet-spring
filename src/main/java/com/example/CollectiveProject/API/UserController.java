@@ -4,6 +4,7 @@ import com.example.CollectiveProject.DTO.AuthResponseDTO;
 import com.example.CollectiveProject.DTO.LoginCredentialsDTO;
 import com.example.CollectiveProject.DTO.UserRequestDTO;
 import com.example.CollectiveProject.Domain.User;
+import com.example.CollectiveProject.Exceptions.DuplicateEntryException;
 import com.example.CollectiveProject.Exceptions.NotFoundException;
 import com.example.CollectiveProject.Mapper.UserMapper;
 import com.example.CollectiveProject.Service.UserService;
@@ -145,7 +146,7 @@ public class UserController {
     }
 
     @GetMapping("/details")
-    public ResponseEntity<?> getUserDetails(){
+    public ResponseEntity<?> getUserDetails() {
         try {
             String email = SecurityContextHolder.getContext().getAuthentication().getName();
             User user = userService.getUserByEmail(email);
@@ -159,4 +160,38 @@ public class UserController {
         }
     }
 
+    @PostMapping("/add-friend/{to}")
+    public ResponseEntity<?> sendFriendRequest(@PathVariable String to) {
+        try {
+            String from = SecurityContextHolder.getContext().getAuthentication().getName();
+            userService.sendFriendRequest(from, to);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (DuplicateEntryException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
+    }
+
+    @PostMapping("/accept-friend/{id}")
+    public ResponseEntity<?> acceptFriendRequest(@PathVariable Integer id) {
+        try {
+            userService.acceptFriendRequest(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/decline-friend/{id}")
+    public ResponseEntity<?> declineFriendRequest(@PathVariable Integer id) {
+        try {
+            userService.declineFriendRequest(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
+    }
 }

@@ -3,12 +3,18 @@ package com.example.CollectiveProject.Service;
 import com.example.CollectiveProject.DTO.PostResponseDTO;
 import com.example.CollectiveProject.DTO.UserRequestDTO;
 import com.example.CollectiveProject.DTO.UserResponseDTO;
+import com.example.CollectiveProject.Domain.FriendRelation;
+import com.example.CollectiveProject.Domain.FriendRequest;
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
+import com.example.CollectiveProject.Exceptions.DuplicateEntryException;
 import com.example.CollectiveProject.Exceptions.NotFoundException;
 import com.example.CollectiveProject.Mapper.PostMapper;
 import com.example.CollectiveProject.Mapper.UserMapper;
+import com.example.CollectiveProject.Repository.FriendRequestRepository;
+import com.example.CollectiveProject.Repository.FriendsRepository;
 import com.example.CollectiveProject.Repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,6 +25,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.example.CollectiveProject.Utilities.Constants;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +38,10 @@ public class UserService implements UserDetailsService {
     private PostMapper postMapper;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private FriendRequestRepository friendRequestRepository;
+    @Autowired
+    private FriendsRepository friendsRepository;
 
     public boolean addService(UserRequestDTO userRequest) {
         try {
@@ -122,6 +133,55 @@ public class UserService implements UserDetailsService {
             throw new NotFoundException("User not found");
         }
         return user;
+    }
+
+    public void sendFriendRequest(String fromUserEmail, String toUserEmail) throws NotFoundException, DuplicateEntryException {
+        if (fromUserEmail == toUserEmail) {
+            throw new DuplicateEntryException("You can't send a friend request to yourself");
+        }
+
+        User fromUser = this.userRepository.findUserByEmail(fromUserEmail);
+        User toUser = this.userRepository.findUserByEmail(toUserEmail);
+
+        if (fromUser == null || toUser == null) {
+            throw new NotFoundException("User not found");
+        }
+
+        if (this.friendRequestRepository.existsBySenderIdAndReceiverId(fromUser.getUserId(), toUser.getUserId()) ||
+                this.friendRequestRepository.existsBySenderIdAndReceiverId(toUser.getUserId(), fromUser.getUserId())) {
+            throw new DuplicateEntryException("Friend request already sent");
+        }
+
+        if(this.friendsRepository.existsByUser1IdAndUser2Id(fromUser.getUserId(), toUser.getUserId())
+            || this.friendsRepository.existsByUser1IdAndUser2Id(toUser.getUserId(), fromUser.getUserId())
+        ){
+            throw new DuplicateEntryException("Friend relation already exist");
+        }
+
+        this.friendRequestRepository.save(new FriendRequest(fromUser.getUserId(), toUser.getUserId()));
+    }
+
+    @Transactional
+    public void acceptFriendRequest(Integer id) throws NotFoundException {
+        FriendRequest friendRequest = this.friendRequestRepository.findById(id);
+
+        if (friendRequest == null) {
+            throw new NotFoundException("Friend request not found");
+        }
+
+        this.friendsRepository.save(new FriendRelation(friendRequest.getSenderId(), friendRequest.getReceiverId()));
+        this.friendRequestRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void declineFriendRequest(Integer id) throws NotFoundException {
+        FriendRequest friendRequest = this.friendRequestRepository.findById(id);
+
+        if (friendRequest == null) {
+            throw new NotFoundException("Friend request not found");
+        }
+
+        this.friendRequestRepository.deleteById(id);
     }
 
     @Override

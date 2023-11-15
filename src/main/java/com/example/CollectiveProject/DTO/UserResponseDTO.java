@@ -1,18 +1,12 @@
 package com.example.CollectiveProject.DTO;
 
-import com.example.CollectiveProject.Domain.Post;
-import com.example.CollectiveProject.Mapper.PostMapper;
 import com.example.CollectiveProject.Utilities.CalendarUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @AllArgsConstructor

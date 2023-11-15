@@ -12,7 +12,6 @@ import com.example.CollectiveProject.Utilities.CalendarUtils;
 public interface UserRepository extends JpaRepository<User, Integer> {
     User findUserByEmail(String email);
 
-
     User findUserByUsername(String username);
 
     @Query("SELECT new com.example.CollectiveProject.DTO.UserResponseDTO(" +
