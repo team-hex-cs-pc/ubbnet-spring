@@ -102,4 +102,26 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
     }
+
+    @PostMapping("/like/{postReference}")
+    public ResponseEntity<?> like(@PathVariable String postReference) {
+        try {
+            return new ResponseEntity<>(postService.likePost(postReference), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
+    }
+
+    @PostMapping("/dislike/{postReference}")
+    public ResponseEntity<?> dislike(@PathVariable String postReference) {
+        try {
+            return new ResponseEntity<>(postService.dislikePost(postReference), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
+    }
 }
