@@ -24,8 +24,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http, NoOpPasswordEncoder noOpPasswordEncoder)
-            throws Exception {
+    public AuthenticationManager authenticationManager(HttpSecurity http, NoOpPasswordEncoder noOpPasswordEncoder) throws Exception {
         AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
         authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(noOpPasswordEncoder);
         return authenticationManagerBuilder.build();
@@ -34,11 +33,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http.authorizeRequests()
-                .requestMatchers("/user/**").permitAll()
-                .requestMatchers("/post/**").authenticated()
-                .and().addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class).authorizeRequests()
-                .and().csrf(csrf -> csrf.disable());
+        http.authorizeRequests().requestMatchers("/user/**").permitAll()
+//                .requestMatchers("/post/**").authenticated()
+                .requestMatchers("/post/**").permitAll() // temporary fix - enables testing Post entity
+                .and().addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class).authorizeRequests().and().csrf(csrf -> csrf.disable());
 
         return http.build();
     }

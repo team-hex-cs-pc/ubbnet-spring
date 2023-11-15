@@ -1,83 +1,114 @@
 package com.example.CollectiveProject.Service;
 
+import com.example.CollectiveProject.DTO.PostResponseDTO;
+import com.example.CollectiveProject.DTO.UserRequestDTO;
+import com.example.CollectiveProject.DTO.UserResponseDTO;
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.User;
 import com.example.CollectiveProject.Exceptions.NotFoundException;
+import com.example.CollectiveProject.Mapper.PostMapper;
 import com.example.CollectiveProject.Mapper.UserMapper;
 import com.example.CollectiveProject.Repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.CollectiveProject.Utilities.Constants;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class UserService  implements UserDetailsService {
-
+public class UserService implements UserDetailsService {
     @Autowired
     private UserMapper userMapper;
     @Autowired
-    private UserRepository repository;
+    private PostMapper postMapper;
+    @Autowired
+    private UserRepository userRepository;
 
-    public User addService(User entity) {
-        return this.repository.save(entity);
+    public boolean addService(UserRequestDTO userRequest) {
+        try {
+            User user = userMapper.userRequestDtoToEntity(userRequest);
+            this.userRepository.save(user);
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     public List<User> addAllService(List<User> entities) {
-        return this.repository.saveAll(entities);
+        return this.userRepository.saveAll(entities);
     }
 
-    public User getEntityById(Integer id) {
-        return this.repository.findById(id).orElse(null);
-    }
+    public Page<UserResponseDTO> getAll(int pageCount) throws NotFoundException {
+        Page<UserResponseDTO> users = userRepository.findAllUsers(PageRequest.of(pageCount, Constants.PAGE_SIZE));
 
-    public List<User> getAll() {
-        return this.repository.findAll();
-    }
-
-    public boolean exists(Integer id) {
-        return this.repository.existsById(id);
-    }
-
-    public String deleteService(Integer id) {
-        User user = this.getEntityById(id);
-        if (user != null) {
-            this.repository.delete(user);
-            return "User with id " + id + ".";
+        if (users.getContent().isEmpty()) {
+            throw new NotFoundException("No users found!");
         }
-        return "There is no User with the id " + id + '.';
+
+        return users;
     }
 
-    public User updateService(Integer id, User newEntity) {
-        User entityForUpdate = this.repository.findById(id).orElse(null);
-        if (entityForUpdate != null) {
-            entityForUpdate.setBirthdate(newEntity.getBirthdate());
-            entityForUpdate.setFirstName(newEntity.getFirstName());
-            entityForUpdate.setLastName(newEntity.getLastName());
-            entityForUpdate.setEmail(newEntity.getEmail());
-            entityForUpdate.setUsername(newEntity.getUsername());
-            entityForUpdate.setPassword(newEntity.getPassword());
-            entityForUpdate.setGender(newEntity.getGender());
-            return this.repository.save(entityForUpdate);
+    public UserResponseDTO getUserByUsername(String username) throws NotFoundException {
+        User user = userRepository.findUserByUsername(username);
+
+        if (user == null) {
+            throw new NotFoundException("No user found!");
         }
-        return null;
+
+        return userMapper.userToResponseDto(user);
     }
 
-    public List<Post> getPostsByAuthor(Integer writerId) {
-        User w = this.getEntityById(writerId);
-        if (w != null) {
-            return w.getPosts();
+    public boolean deleteService(String username) throws NotFoundException {
+        User user = userRepository.findUserByUsername(username);
+
+        if (user == null) {
+            throw new NotFoundException("No user found!");
+        } else {
+            userRepository.delete(user);
+            return true;
         }
-        return null;
+    }
+
+    public boolean updateService(String username, UserRequestDTO newEntity) throws NotFoundException {
+        User userToUpdate = userRepository.findUserByUsername(username);
+
+        if (userToUpdate == null) {
+            throw new NotFoundException("Post not found!");
+        }
+
+        try {
+            User newUser = userMapper.userRequestDtoToEntity(newEntity);
+            newUser.setUserId(userToUpdate.getUserId());
+            userRepository.save(newUser);
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    public List<PostResponseDTO> getPostsByUser(String username) throws NotFoundException {
+        User user = userRepository.findUserByUsername(username);
+
+        if (user == null) {
+            throw new NotFoundException("User not found!");
+        } else {
+            List<Post> userPosts = user.getPosts();
+            return userPosts.stream().map(postMapper::postToResponseDto).collect(Collectors.toList());
+        }
     }
 
     public User getUserByEmail(String email) throws NotFoundException {
-        User user = this.repository.findUserByEmail(email);
-        if(user == null){
+        User user = this.userRepository.findUserByEmail(email);
+        if (user == null) {
             throw new NotFoundException("User not found");
         }
         return user;
@@ -85,12 +116,9 @@ public class UserService  implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = this.repository.findUserByEmail(email);
+        User user = this.userRepository.findUserByEmail(email);
 
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .build();
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder().username(user.getEmail()).password(user.getPassword()).build();
 
         return userDetails;
     }

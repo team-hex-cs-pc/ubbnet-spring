@@ -1,102 +1,104 @@
 package com.example.CollectiveProject.API;
 
-import com.example.CollectiveProject.Domain.Post;
+import com.example.CollectiveProject.DTO.PostRequestDTO;
+import com.example.CollectiveProject.DTO.PostResponseDTO;
 import com.example.CollectiveProject.Domain.User;
+import com.example.CollectiveProject.Exceptions.NotFoundException;
 import com.example.CollectiveProject.Service.PostService;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/post")
+@RequestMapping("/api/post")
 @AllArgsConstructor
 public class PostController {
-    private PostService service;
+    @Autowired
+    private final PostService postService;
 
-    @PostMapping("/add")
-    public Post add(@RequestBody Post newEntity) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getCredentials();
-        newEntity.setUser(user);
-        return this.service.addService(newEntity);
+    @PostMapping
+    //  We will use this method declaration in order to use JWT from headers
+    //  In Service everything is implemented, just needs to be uncommented
+    // Those params should be passed to all methods after the login is in frontend in order to properly test it
+//    public ResponseEntity<?> add(@RequestHeader("Authorization") String authorizationHeader, @RequestBody PostRequestDTO postRequestDTO) {
+    public ResponseEntity<?> add(@RequestBody PostRequestDTO postRequestDTO) {
+        try {
+            return new ResponseEntity<>(postService.addService(postRequestDTO), HttpStatus.CREATED);
+        } catch (Exception ex) { // TODO: More custom exceptions
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
     }
 
     @PostMapping("/all")
-    public List<Post> addAll(@RequestBody List<Post> list) {
-        return this.service.addAllService(list);
+    public ResponseEntity<Object> addAll(@RequestBody List<PostRequestDTO> postRequestDTOs) {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        User user = (User) authentication.getCredentials();
+        User user = null;
+
+        List<PostResponseDTO> responseDTOs = postService.addAllService(postRequestDTOs, user);
+        return showMessage(responseDTOs, HttpStatus.CREATED);
     }
 
     public ResponseEntity<Object> showMessage(Object messageOrEntity, HttpStatus status) {
         return ResponseEntity.status(status).body(messageOrEntity);
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<Object> getAll() {
-        List<Post> posts = service.getAll();
-
-        if (posts.isEmpty()) {
-            return showMessage("There are no posts yet.", HttpStatus.NOT_FOUND);
-        }
-
-        // sort the posts by publicationDate in descending order
-        List<Post> sortedPosts = posts.stream()
-                .sorted((post1, post2) -> post2.getPublicationDate().compareTo(post1.getPublicationDate()))
-                .collect(Collectors.toList());
-
-        return showMessage(sortedPosts, HttpStatus.OK);
-    }
-
-    @GetMapping("/author/{id}")
-    public ResponseEntity<Object> getAuthor(@PathVariable("id") Integer id) {
-        User user = this.service.getAuthorByArticle(id);
-        if (user != null) {
-            return ResponseEntity.ok(user); // 200
-        } else {
-            String errorMessage = "User not found for post with ID: " + id;
-            return showMessage(errorMessage, HttpStatus.NOT_FOUND); // 404
+    @GetMapping
+    public ResponseEntity<?> getAll() {
+        try {
+            return new ResponseEntity<>(postService.getAll(), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Object> getById(@PathVariable("id") Integer id) {
-        Post NewsPost = this.service.getEntityById(id);
-        if (NewsPost != null) {
-            return ResponseEntity.ok(NewsPost); // 200
-        } else {
-            String errorMessage = "Post with id " + id + " was not found.";
-            return this.showMessage(errorMessage, HttpStatus.NOT_FOUND); // 404
+    @GetMapping("/user/{postReference}")
+    public ResponseEntity<?> getUser(@PathVariable String postReference) {
+        try {
+            return new ResponseEntity<>(postService.getUserByPost(postReference), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Object> delete(@PathVariable("id") Integer id) {
-        String deleteMessage;
-        HttpStatus status;
-        if (this.service.exists(id)) {
-            this.service.deleteService(id);
-            deleteMessage = "Post with id " + id + " was successfully deleted.";
-            status = HttpStatus.OK; // 200
-        } else {
-            deleteMessage = "Post with id " + id + " was not found.";
-            status = HttpStatus.NOT_FOUND; // 404
+    @GetMapping("/{postReference}")
+    public ResponseEntity<?> getByPostReference(@PathVariable String postReference) {
+        try {
+            return new ResponseEntity<>(postService.getEntityByPostReference(postReference), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
-        return this.showMessage(deleteMessage, status);
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<Object> update(@PathVariable("id") Integer id, @RequestBody Post entity) {
-        Post NewsPost = this.service.updateService(id, entity);
-        if (NewsPost != null) {
-            return ResponseEntity.status(HttpStatus.OK).body(NewsPost); // 200
-        } else {
-            String errorMessage = "The post with id " + id + " was not found.";
-            return this.showMessage(errorMessage, HttpStatus.NOT_FOUND); // 404
+    @DeleteMapping("/{postReference}")
+    public ResponseEntity<?> delete(@PathVariable String postReference) {
+        try {
+            return new ResponseEntity<>(postService.deleteService(postReference), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
+    }
+
+    @PutMapping("/{postReference}")
+    public ResponseEntity<?> update(@PathVariable String postReference, @RequestBody PostRequestDTO postRequestDTO) {
+        try {
+            return new ResponseEntity<>(postService.updateService(postReference, postRequestDTO), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
     }
 }
