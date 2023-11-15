@@ -125,24 +125,30 @@ public class UserService implements UserDetailsService {
         return user;
     }
 
-    public void sendFriendRequest(Integer fromUserId, Integer toUserId) throws NotFoundException, DuplicateEntryException {
-        if (fromUserId == toUserId) {
+    public void sendFriendRequest(String fromUserEmail, String toUserEmail) throws NotFoundException, DuplicateEntryException {
+        if (fromUserEmail == toUserEmail) {
             throw new DuplicateEntryException("You can't send a friend request to yourself");
         }
 
-        User fromUser = this.userRepository.findUserByUserId(fromUserId);
-        User toUser = this.userRepository.findUserByUserId(toUserId);
+        User fromUser = this.userRepository.findUserByEmail(fromUserEmail);
+        User toUser = this.userRepository.findUserByEmail(toUserEmail);
 
         if (fromUser == null || toUser == null) {
             throw new NotFoundException("User not found");
         }
 
-        if (this.friendRequestRepository.existsBySenderIdAndReceiverId(fromUserId, toUserId) ||
-                this.friendRequestRepository.existsBySenderIdAndReceiverId(toUserId, fromUserId)) {
+        if (this.friendRequestRepository.existsBySenderIdAndReceiverId(fromUser.getUserId(), toUser.getUserId()) ||
+                this.friendRequestRepository.existsBySenderIdAndReceiverId(toUser.getUserId(), fromUser.getUserId())) {
             throw new DuplicateEntryException("Friend request already sent");
         }
 
-        this.friendRequestRepository.save(new FriendRequest(fromUserId, toUserId));
+        if(this.friendsRepository.existsByUser1IdAndUser2Id(fromUser.getUserId(), toUser.getUserId())
+            || this.friendsRepository.existsByUser1IdAndUser2Id(toUser.getUserId(), fromUser.getUserId())
+        ){
+            throw new DuplicateEntryException("Friend relation already exist");
+        }
+
+        this.friendRequestRepository.save(new FriendRequest(fromUser.getUserId(), toUser.getUserId()));
     }
 
     @Transactional

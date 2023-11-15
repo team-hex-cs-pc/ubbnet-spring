@@ -35,7 +35,6 @@ public interface UserMapper {
         return CalendarUtils.convertDateToString(date);
     }
 
-    @Mapping(target = "id", source = "user.userId")
     @Mapping(target = "username", source = "user.username")
     @Mapping(target = "firstName", source = "user.firstName")
     @Mapping(target = "lastName", source = "user.lastName")

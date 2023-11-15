@@ -147,13 +147,11 @@ public class UserController {
         }
     }
 
-    @PostMapping("/add-friend/{from}/{to}")
-    public ResponseEntity<?> sendFriendRequest(@PathVariable Integer to) {
+    @PostMapping("/add-friend/{to}")
+    public ResponseEntity<?> sendFriendRequest(@PathVariable String to) {
         try {
-            String email = SecurityContextHolder.getContext().getAuthentication().getName();
-            User user = userService.getUserByEmail(email);
-
-            userService.sendFriendRequest(user.getUserId(), to);
+            String from = SecurityContextHolder.getContext().getAuthentication().getName();
+            userService.sendFriendRequest(from, to);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (NotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());

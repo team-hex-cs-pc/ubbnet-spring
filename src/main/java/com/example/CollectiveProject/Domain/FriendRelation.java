@@ -2,13 +2,17 @@ package com.example.CollectiveProject.Domain;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
 @Entity
+@Getter
+@Setter
 @Table(name = "FRIEND_RELATIONS_TABLE")
 public class FriendRelation {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column
@@ -25,4 +29,5 @@ public class FriendRelation {
     public FriendRelation() {
 
     }
+
 }

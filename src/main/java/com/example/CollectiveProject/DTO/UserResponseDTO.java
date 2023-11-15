@@ -12,7 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserResponseDTO {
-    private Integer id;
     private String firstName;
     private String lastName;
     private String email;
@@ -21,8 +20,7 @@ public class UserResponseDTO {
     private String username;
     private List<String> posts;
 
-    public UserResponseDTO(Integer id, String firstName, String lastName, String email, Date birthday, String gender, String username) {
-        this.id = id;
+    public UserResponseDTO(String firstName, String lastName, String email, Date birthday, String gender, String username) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
