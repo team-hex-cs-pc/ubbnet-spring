@@ -1,9 +1,6 @@
 package com.example.CollectiveProject.Domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
@@ -11,11 +8,21 @@ import lombok.Data;
 @Table(name = "FRIEND_RELATIONS_TABLE")
 public class FriendRelation {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @Column
-    private Long user1Id;
+    private Integer user1Id;
 
     @Column
-    private Long user2Id;
+    private Integer user2Id;
+
+    public FriendRelation(Integer user1Id, Integer user2Id) {
+        this.user1Id = user1Id;
+        this.user2Id = user2Id;
+    }
+
+    public FriendRelation() {
+
+    }
 }

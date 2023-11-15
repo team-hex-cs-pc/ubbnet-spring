@@ -13,8 +13,6 @@ import java.util.Date;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     @Mapping(target = "userId", ignore = true)
-
-
     @Mapping(target = "username", source = "userRequestDTO.username")
     @Mapping(target = "firstName", source = "userRequestDTO.firstName")
     @Mapping(target = "lastName", source = "userRequestDTO.lastName")
@@ -37,6 +35,7 @@ public interface UserMapper {
         return CalendarUtils.convertDateToString(date);
     }
 
+    @Mapping(target = "id", source = "user.userId")
     @Mapping(target = "username", source = "user.username")
     @Mapping(target = "firstName", source = "user.firstName")
     @Mapping(target = "lastName", source = "user.lastName")
