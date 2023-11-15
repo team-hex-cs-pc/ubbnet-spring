@@ -122,4 +122,13 @@ public class UserService implements UserDetailsService {
 
         return userDetails;
     }
+
+    public String getUsernameByEmail(String email) throws NotFoundException {
+        User user = userRepository.findUsernameByEmail(email);
+        if (user != null) {
+            return user.getUsername();
+        } else {
+            throw new NotFoundException("Username not found for the given email");
+        }
+    }
 }
