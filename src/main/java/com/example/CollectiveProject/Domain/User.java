@@ -40,5 +40,9 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.DETACH)
     @JsonManagedReference
     private List<Post> posts;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.DETACH)
+    @JsonManagedReference
+    private List<Reaction> reactions;
 }
 

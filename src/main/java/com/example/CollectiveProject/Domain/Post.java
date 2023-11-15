@@ -1,6 +1,7 @@
 package com.example.CollectiveProject.Domain;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -39,7 +40,8 @@ public class Post {
     @JsonBackReference
     private User user;
 
-    //@OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
-    //private List<Reaction> reactions;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.DETACH)
+    @JsonManagedReference
+    private List<Reaction> reactions;
 }
 
