@@ -80,6 +80,18 @@ public class UserController {
         }
     }
 
+    @GetMapping("/username/{email}")
+    public ResponseEntity<String> getUsernameByEmail(@PathVariable String email) {
+        try {
+            String username = userService.getUsernameByEmail(email);
+            return ResponseEntity.ok(username);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
+    }
+
     @GetMapping("/{username}")
     public ResponseEntity<?> getByUsername(@PathVariable String username) {
         try {
