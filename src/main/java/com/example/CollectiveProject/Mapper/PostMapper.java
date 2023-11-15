@@ -3,9 +3,12 @@ package com.example.CollectiveProject.Mapper;
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.DTO.PostRequestDTO;
 import com.example.CollectiveProject.DTO.PostResponseDTO;
+import com.example.CollectiveProject.Utilities.CalendarUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -22,7 +25,13 @@ public interface PostMapper {
     Post postRequestDtoToEntity(PostRequestDTO postRequestDTO);
 
     default Date getCurrentDate() {
-        return Calendar.getInstance().getTime();
+        try {
+            Date date = Calendar.getInstance().getTime();
+            String todayDate = CalendarUtils.convertDateToString(date);
+            return CalendarUtils.convertStringToDate(todayDate);
+        } catch (Exception e) {
+            return Calendar.getInstance().getTime();
+        }
     }
 
     @Mapping(target = "postReference", source = "post.postReference")
@@ -30,7 +39,11 @@ public interface PostMapper {
     @Mapping(target = "content", source = "post.content")
     @Mapping(target = "category", source = "post.category")
     @Mapping(target = "likes", source = "post.likes")
-    @Mapping(target = "publicationDate", source = "post.publicationDate")
+    @Mapping(target = "publicationDate", expression = "java(getStringFromDate(post.getPublicationDate()))")
     @Mapping(target = "username", source = "post.user.username")
     PostResponseDTO postToResponseDto(Post post);
+
+    default String getStringFromDate(Date date) {
+        return CalendarUtils.convertDateToString(date);
+    }
 }

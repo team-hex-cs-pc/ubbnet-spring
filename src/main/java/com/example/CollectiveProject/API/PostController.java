@@ -48,9 +48,9 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAll() {
+    public ResponseEntity<?> getAll(@RequestParam(defaultValue = "0") int page) {
         try {
-            return new ResponseEntity<>(postService.getAll(), HttpStatus.OK);
+            return new ResponseEntity<>(postService.getAll(page), HttpStatus.OK);
         } catch (NotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         } catch (Exception ex) {
