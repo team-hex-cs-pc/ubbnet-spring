@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Data
@@ -14,16 +15,22 @@ public class Post {
     @Column
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer postId;
+
     @Column(unique = true)
     private String postReference;
+
     @Column
     private String title;
+
     @Column
     private String content;
+
     @Column
     private String category;
+
     @Column
     private int likes = 0;
+
     @Column
     private Date publicationDate;
 
@@ -31,4 +38,8 @@ public class Post {
     @JoinColumn(name = "user_id")
     @JsonBackReference
     private User user;
+
+    //@OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+    //private List<Reaction> reactions;
 }
+

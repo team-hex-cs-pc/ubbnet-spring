@@ -20,4 +20,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Page<UserResponseDTO> findAllUsers(Pageable pageable);
 
     User findUsernameByEmail(String email);
+
+    User getUserByUserId (Integer userId);
 }
