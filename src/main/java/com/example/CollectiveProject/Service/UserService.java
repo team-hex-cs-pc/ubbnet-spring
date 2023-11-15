@@ -157,6 +157,17 @@ public class UserService implements UserDetailsService {
         this.friendRequestRepository.deleteById(id);
     }
 
+    @Transactional
+    public void declineFriendRequest(Integer id) throws NotFoundException {
+        FriendRequest friendRequest = this.friendRequestRepository.findById(id);
+
+        if (friendRequest == null) {
+            throw new NotFoundException("Friend request not found");
+        }
+
+        this.friendRequestRepository.deleteById(id);
+    }
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = this.userRepository.findUserByEmail(email);

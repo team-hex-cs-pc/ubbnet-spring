@@ -173,4 +173,14 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         }
     }
+
+    @PostMapping("/decline-friend/{id}")
+    public ResponseEntity<?> declineFriendRequest(@PathVariable Integer id) {
+        try {
+            userService.declineFriendRequest(id);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
+    }
 }
