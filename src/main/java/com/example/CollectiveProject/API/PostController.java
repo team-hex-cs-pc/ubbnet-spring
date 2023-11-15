@@ -50,11 +50,12 @@ public class PostController {
     @GetMapping
     public ResponseEntity<?> getAll(@RequestParam(defaultValue = "0") int page) {
         try {
-            return new ResponseEntity<>(postService.getAll(page), HttpStatus.OK);
+            //TODO CHANGE TO service.getAll(page) when it is done
+            return new ResponseEntity<>(postService.getAllNormal(), HttpStatus.OK);
         } catch (NotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
         }
     }
 
