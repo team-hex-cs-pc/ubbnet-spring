@@ -92,6 +92,17 @@ public class PostService {
         return posts;
     }
 
+    //TODO remove when getAll is done
+    public List<PostResponseDTO> getAllNormal() throws Exception {
+        List<Post> posts = postRepository.findAll();
+
+        if (posts.isEmpty()) {
+            throw new NotFoundException("No posts found!");
+        }
+
+        return posts.stream().map(postMapper::postToResponseDto).collect(Collectors.toList());
+    }
+
     public boolean deleteService(String postReference) throws Exception {
         Post post = postRepository.findPostByPostReference(postReference);
 

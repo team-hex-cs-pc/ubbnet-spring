@@ -12,7 +12,6 @@ import com.example.CollectiveProject.Repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -55,6 +54,17 @@ public class UserService implements UserDetailsService {
         }
 
         return users;
+    }
+
+    //TODO remove when getAll is done
+    public List<UserResponseDTO> getAllNormal() throws NotFoundException {
+        List<User> users = userRepository.findAll();
+
+        if (users.isEmpty()) {
+            throw new NotFoundException("No users found!");
+        }
+
+        return users.stream().map(userMapper::userToResponseDto).collect(Collectors.toList());
     }
 
     public UserResponseDTO getUserByUsername(String username) throws NotFoundException {
