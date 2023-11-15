@@ -1,5 +1,6 @@
 package com.example.CollectiveProject.API;
 
+import com.example.CollectiveProject.DTO.AuthResponseDTO;
 import com.example.CollectiveProject.DTO.LoginCredentialsDTO;
 import com.example.CollectiveProject.DTO.UserRequestDTO;
 import com.example.CollectiveProject.Domain.User;
@@ -13,8 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,16 +53,16 @@ public class UserController {
 
     // TODO: less logic in controller
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginCredentialsDTO credentialsDTO) {
+    public ResponseEntity<?> login(@RequestBody LoginCredentialsDTO credentialsDTO) {
         try {
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentialsDTO.getEmail(), credentialsDTO.getPassword()));
             String email = authentication.getName();
             User user = userService.getUserByEmail(email);
             String token = jwtUtil.createToken(user);
 
-            return ResponseEntity.ok(token);
+            return ResponseEntity.ok(new AuthResponseDTO(token));
 
-        } catch (BadCredentialsException e) {
+        } catch (InternalAuthenticationServiceException | BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid username or password");
         } catch (NotFoundException | UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -119,5 +122,28 @@ public class UserController {
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
+//        UserMapper mapper = new UserMapper();
+//        Set<UserWithoutCredentialsDTO> all = new HashSet<>();
+//        for (User user : users) {
+//            all.add(mapper.to_userWithoutCredentialsDTO(user));
+//        }
+//        return showMessage(all, HttpStatus.OK); // 200
+//        return null;
     }
+
+    @GetMapping("/details")
+    public ResponseEntity<?> getUserDetails(){
+        try {
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            User user = userService.getUserByEmail(email);
+
+            return ResponseEntity.ok(userMapper.userToResponseDto(user));
+
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid username or password");
+        } catch (NotFoundException | UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
 }
