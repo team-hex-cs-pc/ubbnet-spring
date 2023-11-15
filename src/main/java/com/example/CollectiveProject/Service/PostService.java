@@ -10,8 +10,11 @@ import com.example.CollectiveProject.Mapper.PostMapper;
 import com.example.CollectiveProject.Mapper.UserMapper;
 import com.example.CollectiveProject.Repository.PostRepository;
 import com.example.CollectiveProject.Repository.UserRepository;
+import com.example.CollectiveProject.Utilities.Constants;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,6 +50,7 @@ public class PostService {
 
             String randomPostReference = UUID.randomUUID().toString().replace("-", "");
             postEntity.setPostReference(randomPostReference);
+            postEntity.setLikes(0);
 
             postEntity.setUser(user);
 
@@ -78,16 +82,14 @@ public class PostService {
         return postMapper.postToResponseDto(post);
     }
 
-    public List<PostResponseDTO> getAll() throws Exception {
-        List<Post> posts = postRepository.findAll();
+    public Page<PostResponseDTO> getAll(int pageCount) throws Exception {
+        Page<PostResponseDTO> posts = postRepository.findAllPosts(PageRequest.of(pageCount, Constants.PAGE_SIZE));
 
-        if (posts.isEmpty()) {
+        if (posts.getContent().isEmpty()) {
             throw new NotFoundException("No posts found!");
         }
 
-        return posts.stream().map(postMapper::postToResponseDto)
-//                .sorted((post1, post2) -> post2.getPublicationDate().compareTo(post1.getPublicationDate()))
-                .collect(Collectors.toList());
+        return posts;
     }
 
     public boolean deleteService(String postReference) throws Exception {
