@@ -51,4 +51,16 @@ public class ReactionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
     }
+
+    @DeleteMapping("/{postReference}")
+    private ResponseEntity<?> removeReactionsByPostReference(@PathVariable String postReference){
+        try {
+            reactionService.deleteReactionsByPostReference(postReference);
+            return new ResponseEntity<>("Reactions removed successfully", HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
+    }
 }

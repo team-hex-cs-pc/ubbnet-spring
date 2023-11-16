@@ -40,7 +40,7 @@ public class Post {
     @JsonBackReference
     private User user;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.DETACH)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<Reaction> reactions;
 }

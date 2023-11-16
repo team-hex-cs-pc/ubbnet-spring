@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 public class ReactionService {
@@ -94,6 +96,28 @@ public class ReactionService {
             postService.likePost(postReference);
 
         reactionRepository.delete(existingReaction);
+    }
+
+    public void deleteReactionsByPostReference(String postReference) throws com.example.CollectiveProject.Exceptions.NotFoundException {
+        Post post = postRepository.findPostByPostReference(postReference);
+
+        if (post == null) {
+            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Post not found!");
+        }
+
+        List<Reaction> reactions = reactionRepository.findAllByPost(post);
+
+        if (reactions == null) {
+            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reactions not found!");
+        }
+
+        for (Reaction reaction : reactions) {
+            if(reaction.getType() == Reaction.ReactionType.LIKE)
+                postService.dislikePost(postReference);
+            else
+                postService.likePost(postReference);
+            reactionRepository.delete(reaction);
+        }
     }
 }
 
