@@ -17,6 +17,8 @@ public class ReactionController {
     @Autowired
     private final ReactionService reactionService;
 
+
+    //TODO ADD REACTION DTOS
     @PostMapping("/like/{postReference}/{userId}")
     public ResponseEntity<?> like(@PathVariable String postReference, @PathVariable Integer userId) {
         //TODO CHANGE WITH LOGGED-IN USER, INSTEAD OF USERID
@@ -61,6 +63,33 @@ public class ReactionController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
+    }
+
+    @GetMapping("/{postReference}/post")
+    private ResponseEntity<?> getReactionsByPostReference(@PathVariable String postReference){
+        try {
+            return new ResponseEntity<>(reactionService.getReactionsByPostReference(postReference), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("/{userId}/user")
+    private ResponseEntity<?> getReactionsByUserId(@PathVariable Integer userId){
+        try {
+            return new ResponseEntity<>(reactionService.getReactionsByUserId(userId), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("/{postReference}/{userId}")
+    private ResponseEntity<?> getReactionByPostReferenceAndUserId(@PathVariable String postReference, @PathVariable Integer userId){
+        try {
+            return new ResponseEntity<>(reactionService.getReactionByPostReferenceAndUserId(postReference, userId), HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
     }
 }

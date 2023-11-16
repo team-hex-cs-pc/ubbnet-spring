@@ -119,6 +119,59 @@ public class ReactionService {
             reactionRepository.delete(reaction);
         }
     }
+
+    public List<Reaction> getReactionsByPostReference(String postReference) throws com.example.CollectiveProject.Exceptions.NotFoundException {
+        Post post = postRepository.findPostByPostReference(postReference);
+
+        if (post == null) {
+            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Post not found!");
+        }
+
+        List<Reaction> reactions = reactionRepository.findAllByPost(post);
+
+        if (reactions == null) {
+            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reactions not found!");
+        }
+
+        return reactions;
+    }
+
+    public List<Reaction> getReactionsByUserId(Integer userId) throws com.example.CollectiveProject.Exceptions.NotFoundException {
+        User user = userRepository.getUserByUserId(userId);
+
+        if (user == null) {
+            throw new com.example.CollectiveProject.Exceptions.NotFoundException("User not found!");
+        }
+
+        List<Reaction> reactions = reactionRepository.findAllByUser(user);
+
+        if (reactions == null) {
+            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reactions not found!");
+        }
+
+        return reactions;
+    }
+
+    public Reaction getReactionByPostReferenceAndUserId(String postReference, Integer userId) throws com.example.CollectiveProject.Exceptions.NotFoundException {
+        Post post = postRepository.findPostByPostReference(postReference);
+        User user = userRepository.getUserByUserId(userId);
+
+        if (user == null) {
+            throw new com.example.CollectiveProject.Exceptions.NotFoundException("User not found!");
+        }
+
+        if (post == null) {
+            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Post not found!");
+        }
+
+        Reaction existingReaction = reactionRepository.findByPostAndUser(post, user).orElse(null);
+
+        if (existingReaction == null) {
+            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reaction not found!");
+        }
+
+        return existingReaction;
+    }
 }
 
 

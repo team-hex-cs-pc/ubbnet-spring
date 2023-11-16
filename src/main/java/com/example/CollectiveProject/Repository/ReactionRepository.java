@@ -11,6 +11,8 @@ import java.util.Optional;
 public interface ReactionRepository extends JpaRepository<Reaction, Integer> {
     Optional<Reaction> findByPostAndUser(Post post, User user);
     List<Reaction> findAllByPost(Post post);
+
+    List<Reaction> findAllByUser(User user);
 }
 
 
