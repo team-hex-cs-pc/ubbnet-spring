@@ -18,7 +18,7 @@ public class ReactionController {
     private final ReactionService reactionService;
 
 
-    //TODO ADD REACTION DTOS
+    //TODO ADD REACTION DTOS and change post like/dislike into 1, with postref,userid,type in body instead of pathvariable
     @PostMapping("/like/{postReference}/{userId}")
     public ResponseEntity<?> like(@PathVariable String postReference, @PathVariable Integer userId) {
         //TODO CHANGE WITH LOGGED-IN USER, INSTEAD OF USERID
