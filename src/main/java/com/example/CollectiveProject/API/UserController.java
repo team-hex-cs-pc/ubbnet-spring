@@ -185,7 +185,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/decline-friend/{id}")
+    @DeleteMapping("/decline-friend/{id}")
     public ResponseEntity<?> declineFriendRequest(@PathVariable Integer id) {
         try {
             userService.declineFriendRequest(id);
@@ -194,4 +194,25 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
         }
     }
+
+    @GetMapping("get-friend-request/{toUserEmail}")
+    public ResponseEntity<?> getFriendRequestBetweenTwoUsers(@PathVariable String toUserEmail) {
+        try {
+            var friendRequest = userService.getFriendRequest(SecurityContextHolder.getContext().getAuthentication().getName(), toUserEmail);
+            return new ResponseEntity<>(friendRequest, HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
+    }
+
+    @GetMapping("is-friend/{toUserEmail}")
+    public ResponseEntity<?> getFriendRelationBetweenTwoUsers(@PathVariable String toUserEmail) {
+        try {
+            var areFriends = userService.getFriendRelation(SecurityContextHolder.getContext().getAuthentication().getName(), toUserEmail);
+            return new ResponseEntity<>(areFriends, HttpStatus.OK);
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
+    }
+
 }

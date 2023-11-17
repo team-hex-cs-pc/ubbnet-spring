@@ -1,5 +1,6 @@
 package com.example.CollectiveProject.Service;
 
+import com.example.CollectiveProject.DTO.FriendRequestResponseDTO;
 import com.example.CollectiveProject.DTO.PostResponseDTO;
 import com.example.CollectiveProject.DTO.UserRequestDTO;
 import com.example.CollectiveProject.DTO.UserResponseDTO;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import com.example.CollectiveProject.Utilities.Constants;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -152,9 +154,9 @@ public class UserService implements UserDetailsService {
             throw new DuplicateEntryException("Friend request already sent");
         }
 
-        if(this.friendsRepository.existsByUser1IdAndUser2Id(fromUser.getUserId(), toUser.getUserId())
-            || this.friendsRepository.existsByUser1IdAndUser2Id(toUser.getUserId(), fromUser.getUserId())
-        ){
+        if (this.friendsRepository.existsByUser1IdAndUser2Id(fromUser.getUserId(), toUser.getUserId())
+                || this.friendsRepository.existsByUser1IdAndUser2Id(toUser.getUserId(), fromUser.getUserId())
+        ) {
             throw new DuplicateEntryException("Friend relation already exist");
         }
 
@@ -182,6 +184,47 @@ public class UserService implements UserDetailsService {
         }
 
         this.friendRequestRepository.deleteById(id);
+    }
+
+    public FriendRequestResponseDTO getFriendRequest(String user1Email, String user2Email) throws NotFoundException {
+        User user1 = this.userRepository.findUserByEmail(user1Email);
+        User user2 = this.userRepository.findUserByEmail(user2Email);
+
+        if (user1 == null || user2 == null) {
+            throw new NotFoundException("User not found");
+        }
+
+        Optional<FriendRequest> friendRequest = this.friendRequestRepository.findBySenderIdAndReceiverId(user1.getUserId(), user2.getUserId());
+
+        if (friendRequest.isEmpty()) {
+            friendRequest = this.friendRequestRepository.findBySenderIdAndReceiverId(user2.getUserId(), user1.getUserId());
+            if (friendRequest.isEmpty()) {
+                throw new NotFoundException("Friend request not found");
+            }
+        }
+
+        if (friendRequest.get().getReceiverId() == user1.getUserId()) {
+            return new FriendRequestResponseDTO(friendRequest.get().getId(), user2.getUsername(), user1.getUsername());
+        }
+
+        return new FriendRequestResponseDTO(friendRequest.get().getId(), user1.getUsername(), user2.getUsername());
+    }
+
+    public boolean getFriendRelation(String user1Email, String user2Email) throws NotFoundException {
+        User user1 = this.userRepository.findUserByEmail(user1Email);
+        User user2 = this.userRepository.findUserByEmail(user2Email);
+
+        if (user1 == null || user2 == null) {
+            throw new NotFoundException("User not found");
+        }
+
+        if (this.friendsRepository.existsByUser1IdAndUser2Id(user1.getUserId(), user2.getUserId())
+                || this.friendsRepository.existsByUser1IdAndUser2Id(user2.getUserId(), user1.getUserId())
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override
