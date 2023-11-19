@@ -1,5 +1,6 @@
 package com.example.CollectiveProject.Service;
 
+import com.example.CollectiveProject.DTO.ReactionDTO;
 import com.example.CollectiveProject.Domain.Post;
 import com.example.CollectiveProject.Domain.Reaction;
 import com.example.CollectiveProject.Domain.User;
@@ -11,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 @Service
@@ -41,6 +44,10 @@ public class ReactionService {
 
         if (post == null) {
             throw new com.example.CollectiveProject.Exceptions.NotFoundException("No post found!");
+        }
+
+        if(type == null) {
+            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reaction type not allowed!");
         }
 
         Reaction existingReaction = reactionRepository.findByPostAndUser(post, user).orElse(null);
@@ -86,7 +93,6 @@ public class ReactionService {
             throw new com.example.CollectiveProject.Exceptions.NotFoundException("No post found!");
         }
 
-
         Reaction existingReaction = reactionRepository.findByPostAndUser(post, user)
                 .orElseThrow(() -> new NotFoundException("Reaction not found"));
 
@@ -120,7 +126,7 @@ public class ReactionService {
         }
     }
 
-    public List<Reaction> getReactionsByPostReference(String postReference) throws com.example.CollectiveProject.Exceptions.NotFoundException {
+    public List<ReactionDTO> getReactionsByPostReference(String postReference) throws com.example.CollectiveProject.Exceptions.NotFoundException {
         Post post = postRepository.findPostByPostReference(postReference);
 
         if (post == null) {
@@ -128,15 +134,16 @@ public class ReactionService {
         }
 
         List<Reaction> reactions = reactionRepository.findAllByPost(post);
+        List<ReactionDTO> reactionDTOS = new ArrayList<>();
 
-        if (reactions == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reactions not found!");
+        for (Reaction r : reactions){
+            reactionDTOS.add(ReactionDTO.fromEntity(r));
         }
 
-        return reactions;
+        return reactionDTOS;
     }
 
-    public List<Reaction> getReactionsByUserId(Integer userId) throws com.example.CollectiveProject.Exceptions.NotFoundException {
+    public List<ReactionDTO> getReactionsByUserId(Integer userId) throws com.example.CollectiveProject.Exceptions.NotFoundException {
         User user = userRepository.getUserByUserId(userId);
 
         if (user == null) {
@@ -144,15 +151,16 @@ public class ReactionService {
         }
 
         List<Reaction> reactions = reactionRepository.findAllByUser(user);
+        List<ReactionDTO> reactionDTOS = new ArrayList<>();
 
-        if (reactions == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reactions not found!");
+        for (Reaction r : reactions){
+            reactionDTOS.add(ReactionDTO.fromEntity(r));
         }
 
-        return reactions;
+        return reactionDTOS;
     }
 
-    public Reaction getReactionByPostReferenceAndUserId(String postReference, Integer userId) throws com.example.CollectiveProject.Exceptions.NotFoundException {
+    public ReactionDTO getReactionByPostReferenceAndUserId(String postReference, Integer userId) throws com.example.CollectiveProject.Exceptions.NotFoundException {
         Post post = postRepository.findPostByPostReference(postReference);
         User user = userRepository.getUserByUserId(userId);
 
@@ -166,11 +174,11 @@ public class ReactionService {
 
         Reaction existingReaction = reactionRepository.findByPostAndUser(post, user).orElse(null);
 
-        if (existingReaction == null) {
+        if(existingReaction == null){
             throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reaction not found!");
         }
 
-        return existingReaction;
+        return ReactionDTO.fromEntity(existingReaction);
     }
 }
 
