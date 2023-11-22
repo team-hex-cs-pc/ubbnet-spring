@@ -14,6 +14,8 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
         config.addAllowedOrigin("http://localhost:4200"); // Allow requests from your Angular app
+        config.addAllowedOrigin("https://dev.teamhex.laurcons.ro");
+        config.addAllowedOrigin("https://teamhex.laurcons.ro");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);
