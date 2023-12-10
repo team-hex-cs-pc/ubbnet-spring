@@ -1,12 +1,18 @@
 package com.example.CollectiveProject.API;
 
+import com.example.CollectiveProject.DTO.ReactionDTO;
 import com.example.CollectiveProject.Domain.Reaction;
+import com.example.CollectiveProject.Exceptions.InvalidReactionTypeException;
 import com.example.CollectiveProject.Exceptions.NotFoundException;
 import com.example.CollectiveProject.Service.ReactionService;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,18 +24,20 @@ public class ReactionController {
     private final ReactionService reactionService;
 
 
-    //TODO ADD REACTION DTOS
-    @PostMapping("/like/{postReference}/{userId}")
-    public ResponseEntity<?> like(@PathVariable String postReference, @PathVariable Integer userId) {
-        //TODO CHANGE WITH LOGGED-IN USER, INSTEAD OF USERID
-        return handleReaction(postReference, userId, Reaction.ReactionType.LIKE);
+    @PostMapping
+    public ResponseEntity<?> addReaction(@RequestBody ReactionDTO request) {
+        try {
+            reactionService.addReaction(request.getPostReference(), request.getUserId(), request.getType());
+            return new ResponseEntity<>("Reaction added successfully", HttpStatus.OK);
+        } catch (InvalidReactionTypeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        } catch (NotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
+        }
     }
 
-    @PostMapping("/dislike/{postReference}/{userId}")
-    public ResponseEntity<?> dislike(@PathVariable String postReference, @PathVariable Integer userId) {
-        //TODO CHANGE WITH LOGGED-IN USER, INSTEAD OF USERID
-        return handleReaction(postReference, userId, Reaction.ReactionType.DISLIKE);
-    }
 
     @DeleteMapping("/{postReference}/{userId}")
     public ResponseEntity<?> removeReaction(@PathVariable String postReference, @PathVariable Integer userId) {
@@ -42,18 +50,6 @@ public class ReactionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
         }
     }
-
-    private ResponseEntity<?> handleReaction(String postReference, Integer userId, Reaction.ReactionType type) {
-        try {
-            Reaction reaction = reactionService.addReaction(postReference, userId, type);
-            return new ResponseEntity<>(reaction, HttpStatus.OK);
-        } catch (NotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
-        }
-    }
-
     @DeleteMapping("/{postReference}")
     private ResponseEntity<?> removeReactionsByPostReference(@PathVariable String postReference){
         try {
@@ -91,5 +87,11 @@ public class ReactionController {
         } catch (NotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
         }
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Object> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        String errorMessage = "Invalid request body. Please check the format and values.";
+        return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
     }
 }
