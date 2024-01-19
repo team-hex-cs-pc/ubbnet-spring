@@ -20,166 +20,155 @@ import java.util.List;
 @AllArgsConstructor
 public class ReactionService {
 
-    @Autowired
-    private final ReactionRepository reactionRepository;
+	@Autowired
+	private final ReactionRepository reactionRepository;
 
-    @Autowired
-    private final PostRepository postRepository;
+	@Autowired
+	private final PostRepository postRepository;
 
-    @Autowired
-    private final UserRepository userRepository;
+	@Autowired
+	private final UserRepository userRepository;
 
-    @Autowired
-    private final PostService postService;
+	@Autowired
+	private final PostService postService;
 
+	//TODO ADD REACTION DTOS + MAKE FUNCTIONS RETURN BOOLEAN
+	public Reaction addReaction(String postReference, String userName, Reaction.ReactionType type)
+			throws com.example.CollectiveProject.Exceptions.NotFoundException {
+		Post post = postRepository.findPostByPostReference(postReference);
+		User user = userRepository.findUserByUsername(userName);
 
-    //TODO ADD REACTION DTOS + MAKE FUNCTIONS RETURN BOOLEAN
-    public Reaction addReaction(String postReference, Integer userId, Reaction.ReactionType type) throws com.example.CollectiveProject.Exceptions.NotFoundException {
-        Post post = postRepository.findPostByPostReference(postReference);
-        User user = userRepository.getUserByUserId(userId);
+		if (user == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("No user found!");
+		}
 
-        if (user == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("No user found!");
-        }
+		if (post == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("No post found!");
+		}
 
-        if (post == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("No post found!");
-        }
+		if (type == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reaction type not allowed!");
+		}
 
-        if(type == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reaction type not allowed!");
-        }
+		Reaction existingReaction = reactionRepository.findByPostAndUser(post, user).orElse(null);
+		if (existingReaction == null) {
+			existingReaction = new Reaction();
+			existingReaction.setPost(post);
+			existingReaction.setUser(user);
+			existingReaction.setType(Reaction.ReactionType.LIKE);
+			this.postService.likePost(postReference);
+		} else {
+			if (existingReaction.getType().equals(Reaction.ReactionType.LIKE)) {
+				this.postService.dislikePost(postReference);
+				existingReaction.setType(Reaction.ReactionType.DISLIKE);
+			} else {
+				this.postService.likePost(postReference);
+				existingReaction.setType(Reaction.ReactionType.LIKE);
+			}
+		}
+		return reactionRepository.save(existingReaction);
+	}
 
-        Reaction existingReaction = reactionRepository.findByPostAndUser(post, user).orElse(null);
+	public void removeReaction(String postReference, Integer userId) throws com.example.CollectiveProject.Exceptions.NotFoundException {
+		Post post = postRepository.findPostByPostReference(postReference);
+		User user = userRepository.getUserByUserId(userId);
 
-        if (existingReaction != null) {
-            //Moving from a like to a dislike counts as giving an unlike (-1 like) + dislike (-1 like)
-            if(existingReaction.getType() == Reaction.ReactionType.LIKE && type == Reaction.ReactionType.DISLIKE) {
-                postService.dislikePost(postReference);
-                postService.dislikePost(postReference);
-            }
-            //Moving from a dislike to a like counts as giving an like (+1 like) + like (+1 like)
-            else if(existingReaction.getType() == Reaction.ReactionType.DISLIKE && type == Reaction.ReactionType.LIKE) {
-                postService.likePost(postReference);
-                postService.likePost(postReference);
-            }
-            existingReaction.setType(type);
-            return reactionRepository.save(existingReaction);
-        }
+		if (user == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("No user found!");
+		}
 
-        //if user didn't react to a post already with either like or dislike
-        if(type == Reaction.ReactionType.LIKE) {
-            postService.likePost(postReference);
-        } else {
-            postService.dislikePost(postReference);
-        }
-        Reaction newReaction = new Reaction();
-        newReaction.setPost(post);
-        newReaction.setUser(user);
-        newReaction.setType(type);
+		if (post == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("No post found!");
+		}
 
-        return reactionRepository.save(newReaction);
-    }
+		Reaction existingReaction = reactionRepository.findByPostAndUser(post, user)
+				.orElseThrow(() -> new NotFoundException("Reaction not found"));
 
-    public void removeReaction(String postReference, Integer userId) throws com.example.CollectiveProject.Exceptions.NotFoundException {
-        Post post = postRepository.findPostByPostReference(postReference);
-        User user = userRepository.getUserByUserId(userId);
+		if (existingReaction.getType() == Reaction.ReactionType.LIKE)
+			postService.dislikePost(postReference);
+		else
+			postService.likePost(postReference);
 
-        if (user == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("No user found!");
-        }
+		reactionRepository.delete(existingReaction);
+	}
 
-        if (post == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("No post found!");
-        }
+	public void deleteReactionsByPostReference(String postReference) throws com.example.CollectiveProject.Exceptions.NotFoundException {
+		Post post = postRepository.findPostByPostReference(postReference);
 
-        Reaction existingReaction = reactionRepository.findByPostAndUser(post, user)
-                .orElseThrow(() -> new NotFoundException("Reaction not found"));
+		if (post == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("Post not found!");
+		}
 
-        if (existingReaction.getType() == Reaction.ReactionType.LIKE)
-            postService.dislikePost(postReference);
-        else
-            postService.likePost(postReference);
+		List<Reaction> reactions = reactionRepository.findAllByPost(post);
 
-        reactionRepository.delete(existingReaction);
-    }
+		if (reactions == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reactions not found!");
+		}
 
-    public void deleteReactionsByPostReference(String postReference) throws com.example.CollectiveProject.Exceptions.NotFoundException {
-        Post post = postRepository.findPostByPostReference(postReference);
+		for (Reaction reaction : reactions) {
+			if (reaction.getType() == Reaction.ReactionType.LIKE)
+				postService.dislikePost(postReference);
+			else
+				postService.likePost(postReference);
+			reactionRepository.delete(reaction);
+		}
+	}
 
-        if (post == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Post not found!");
-        }
+	public List<ReactionDTO> getReactionsByPostReference(String postReference) throws com.example.CollectiveProject.Exceptions.NotFoundException {
+		Post post = postRepository.findPostByPostReference(postReference);
 
-        List<Reaction> reactions = reactionRepository.findAllByPost(post);
+		if (post == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("Post not found!");
+		}
 
-        if (reactions == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reactions not found!");
-        }
+		List<Reaction> reactions = reactionRepository.findAllByPost(post);
+		List<ReactionDTO> reactionDTOS = new ArrayList<>();
 
-        for (Reaction reaction : reactions) {
-            if(reaction.getType() == Reaction.ReactionType.LIKE)
-                postService.dislikePost(postReference);
-            else
-                postService.likePost(postReference);
-            reactionRepository.delete(reaction);
-        }
-    }
+		for (Reaction r : reactions) {
+			reactionDTOS.add(ReactionDTO.fromEntity(r));
+		}
 
-    public List<ReactionDTO> getReactionsByPostReference(String postReference) throws com.example.CollectiveProject.Exceptions.NotFoundException {
-        Post post = postRepository.findPostByPostReference(postReference);
+		return reactionDTOS;
+	}
 
-        if (post == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Post not found!");
-        }
+	public List<ReactionDTO> getReactionsByUserId(Integer userId) throws com.example.CollectiveProject.Exceptions.NotFoundException {
+		User user = userRepository.getUserByUserId(userId);
 
-        List<Reaction> reactions = reactionRepository.findAllByPost(post);
-        List<ReactionDTO> reactionDTOS = new ArrayList<>();
+		if (user == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("User not found!");
+		}
 
-        for (Reaction r : reactions){
-            reactionDTOS.add(ReactionDTO.fromEntity(r));
-        }
+		List<Reaction> reactions = reactionRepository.findAllByUser(user);
+		List<ReactionDTO> reactionDTOS = new ArrayList<>();
 
-        return reactionDTOS;
-    }
+		for (Reaction r : reactions) {
+			reactionDTOS.add(ReactionDTO.fromEntity(r));
+		}
 
-    public List<ReactionDTO> getReactionsByUserId(Integer userId) throws com.example.CollectiveProject.Exceptions.NotFoundException {
-        User user = userRepository.getUserByUserId(userId);
+		return reactionDTOS;
+	}
 
-        if (user == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("User not found!");
-        }
+	public ReactionDTO getReactionByPostReferenceAndUserId(String postReference, Integer userId) throws
+			com.example.CollectiveProject.Exceptions.NotFoundException {
+		Post post = postRepository.findPostByPostReference(postReference);
+		User user = userRepository.getUserByUserId(userId);
 
-        List<Reaction> reactions = reactionRepository.findAllByUser(user);
-        List<ReactionDTO> reactionDTOS = new ArrayList<>();
+		if (user == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("User not found!");
+		}
 
-        for (Reaction r : reactions){
-            reactionDTOS.add(ReactionDTO.fromEntity(r));
-        }
+		if (post == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("Post not found!");
+		}
 
-        return reactionDTOS;
-    }
+		Reaction existingReaction = reactionRepository.findByPostAndUser(post, user).orElse(null);
 
-    public ReactionDTO getReactionByPostReferenceAndUserId(String postReference, Integer userId) throws com.example.CollectiveProject.Exceptions.NotFoundException {
-        Post post = postRepository.findPostByPostReference(postReference);
-        User user = userRepository.getUserByUserId(userId);
+		if (existingReaction == null) {
+			throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reaction not found!");
+		}
 
-        if (user == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("User not found!");
-        }
-
-        if (post == null) {
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Post not found!");
-        }
-
-        Reaction existingReaction = reactionRepository.findByPostAndUser(post, user).orElse(null);
-
-        if(existingReaction == null){
-            throw new com.example.CollectiveProject.Exceptions.NotFoundException("Reaction not found!");
-        }
-
-        return ReactionDTO.fromEntity(existingReaction);
-    }
+		return ReactionDTO.fromEntity(existingReaction);
+	}
 }
 
 
