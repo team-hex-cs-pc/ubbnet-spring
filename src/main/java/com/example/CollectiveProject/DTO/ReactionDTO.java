@@ -8,13 +8,13 @@ import lombok.Data;
 public class ReactionDTO {
     private String postReference;
     private Reaction.ReactionType type;
-    private Integer userId;
+    private String userName;
 
     public static ReactionDTO fromEntity(Reaction reaction) {
         ReactionDTO dto = new ReactionDTO();
         dto.setPostReference(reaction.getPost().getPostReference());
         dto.setType(reaction.getType());
-        dto.setUserId(reaction.getUser().getUserId());
+        dto.setUserName(reaction.getUser().getUsername());
 
         if (!isValidReactionType(dto.getType())) {
             throw new InvalidReactionTypeException("Invalid ReactionType: " + dto.getType());
