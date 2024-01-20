@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,6 +41,8 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<?> add(@RequestBody UserRequestDTO userRequest) {
         try {
+            String hashedPassword = userService.hashPassword(userRequest.getPassword());
+            userRequest.setPassword(hashedPassword);
             return new ResponseEntity<>(userService.addService(userRequest), HttpStatus.CREATED);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Unexpected error occurred.");
@@ -56,9 +59,12 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginCredentialsDTO credentialsDTO) {
         try {
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentialsDTO.getEmail(), credentialsDTO.getPassword()));
-            String email = authentication.getName();
-            User user = userService.getUserByEmail(email);
+            User user = userService.getUserByEmail(credentialsDTO.getEmail());
+            if (!BCrypt.checkpw(credentialsDTO.getPassword(), user.getPassword())) {
+                throw new BadCredentialsException("Invalid username or password");
+            }
+            String hashedPassword = user.getPassword();
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(credentialsDTO.getEmail(), hashedPassword));
             String token = jwtUtil.createToken(user);
 
             return ResponseEntity.ok(new AuthResponseDTO(token));

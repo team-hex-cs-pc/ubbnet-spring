@@ -1,6 +1,7 @@
 # Ignore dev profile related files
 application-dev.properties
 application.properties
+**/src/main/resources/application.properties
 
 HELP.md
 target/
