@@ -23,12 +23,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import com.example.CollectiveProject.Utilities.Constants;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,6 +52,18 @@ public class UserService implements UserDetailsService {
     public boolean addService(UserRequestDTO userRequest) {
         try {
             User user = userMapper.userRequestDtoToEntity(userRequest);
+
+            // Assuming userRequest has a field named 'birthdate' as a String
+            String birthdateString = userRequest.getBirthdate(); // Get the birthdate string
+
+            // Parse the string to a date considering it's in ISO 8601 format
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC")); // Set time zone to UTC
+            Date parsedDate = sdf.parse(birthdateString);
+
+            // Set the parsed date in the User entity
+            user.setBirthdate(parsedDate);
+
             this.userRepository.save(user);
             return true;
         } catch (Exception ex) {
@@ -243,5 +259,9 @@ public class UserService implements UserDetailsService {
         } else {
             throw new NotFoundException("Username not found for the given email");
         }
+    }
+
+    public String hashPassword(String password) {
+        return BCrypt.hashpw(password, BCrypt.gensalt());
     }
 }

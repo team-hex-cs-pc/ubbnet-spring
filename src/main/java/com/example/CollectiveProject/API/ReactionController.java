@@ -27,7 +27,7 @@ public class ReactionController {
     @PostMapping
     public ResponseEntity<?> addReaction(@RequestBody ReactionDTO request) {
         try {
-            reactionService.addReaction(request.getPostReference(), request.getUserId(), request.getType());
+            reactionService.addReaction(request.getPostReference(), request.getUserName(), request.getType());
             return new ResponseEntity<>("Reaction added successfully", HttpStatus.OK);
         } catch (InvalidReactionTypeException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
